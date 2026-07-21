@@ -5,9 +5,11 @@ import type { Database } from '@/types/database'
 
 type MidiaRow = Database['public']['Tables']['midia']['Row']
 
+/** Bucket único da biblioteca — pastas e arquivos ficam no mesmo lugar no Storage. */
 const DEFAULT_BUCKET = 'fotos'
-/** Marcador de pasta vazia — precisa ser image/* por causa do MIME do bucket `fotos`. */
-const FOLDER_KEEP = '.keep.png'
+/** Marcador visível de pasta vazia (image/png). */
+const FOLDER_KEEP = '_keep.png'
+const LEGACY_FOLDER_KEEP = '.keep.png'
 const FOLDER_KEEP_PNG = Uint8Array.from(
   atob(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
@@ -15,17 +17,48 @@ const FOLDER_KEEP_PNG = Uint8Array.from(
   (c) => c.charCodeAt(0),
 )
 
-function bucketForMime(mime: string): string {
-  if (mime.startsWith('audio/')) return 'podcast'
-  if (
-    mime === 'application/pdf' ||
-    mime.startsWith('application/msword') ||
-    mime.includes('officedocument')
-  ) {
-    return 'documentos'
+const EXT_MIME: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+  mov: 'video/quicktime',
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  aac: 'audio/aac',
+  m4a: 'audio/mp4',
+  pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+}
+
+function resolveMime(file: File): string {
+  if (file.type && file.type !== 'application/octet-stream') return file.type
+  const ext = file.name.includes('.')
+    ? (file.name.split('.').pop() ?? '').toLowerCase()
+    : ''
+  return EXT_MIME[ext] || 'application/octet-stream'
+}
+
+function formatStorageError(err: unknown, fileName?: string): Error {
+  const message = err instanceof Error ? err.message : String(err)
+  const prefix = fileName ? `${fileName}: ` : ''
+  if (/mime|not allowed|invalid.*type/i.test(message)) {
+    return new Error(
+      `${prefix}tipo de arquivo não permitido no Storage. Use JPG, PNG, WebP, GIF, MP4, MP3 ou PDF.`,
+    )
   }
-  // Imagens e vídeos ficam em `fotos` (MIME ampliado na migration)
-  return DEFAULT_BUCKET
+  if (/payload|too large|maximum|size|413/i.test(message)) {
+    return new Error(`${prefix}arquivo grande demais (limite 100 MB).`)
+  }
+  if (/row-level security|permission|not authorized|jwt/i.test(message)) {
+    return new Error(`${prefix}sem permissão de upload. Faça login novamente como admin.`)
+  }
+  return new Error(`${prefix}${message}`)
 }
 
 function formatSize(bytes: number | null): string {
@@ -55,10 +88,14 @@ export function normalizeFolder(input: string): string {
     .join('/')
 }
 
+function isFolderKeep(name: string): boolean {
+  return name === FOLDER_KEEP || name === LEGACY_FOLDER_KEEP
+}
+
 export function folderFromPath(path: string): string {
   const parts = path.split('/').filter(Boolean)
   if (parts.length <= 1) return ''
-  if (parts[parts.length - 1] === FOLDER_KEEP) {
+  if (isFolderKeep(parts[parts.length - 1] ?? '')) {
     return parts.slice(0, -1).join('/')
   }
   return parts.slice(0, -1).join('/')
@@ -132,7 +169,7 @@ export async function listMidiaFolders(): Promise<string[]> {
 
     for (const entry of data) {
       const fullPath = prefix ? `${prefix}/${entry.name}` : entry.name
-      if (entry.name === FOLDER_KEEP) {
+      if (isFolderKeep(entry.name)) {
         if (prefix) folders.add(prefix)
         continue
       }
@@ -157,18 +194,25 @@ export async function createMidiaFolder(folderInput: string) {
   const folder = normalizeFolder(folderInput)
   if (!folder) throw new Error('Informe um nome de pasta válido.')
 
-  const path = `${folder}/${FOLDER_KEEP}`
-  const { error } = await supabase.storage.from(DEFAULT_BUCKET).upload(
-    path,
-    new Blob([FOLDER_KEEP_PNG], { type: 'image/png' }),
-    {
-      upsert: true,
-      contentType: 'image/png',
-    },
-  )
+  // Garante cada nível do caminho no Storage (ex.: equipes/colaboradores)
+  const segments = folder.split('/')
+  let current = ''
+  for (const segment of segments) {
+    current = current ? `${current}/${segment}` : segment
+    const path = `${current}/${FOLDER_KEEP}`
+    const { error } = await supabase.storage.from(DEFAULT_BUCKET).upload(
+      path,
+      new Blob([FOLDER_KEEP_PNG], { type: 'image/png' }),
+      {
+        upsert: true,
+        contentType: 'image/png',
+        cacheControl: '3600',
+      },
+    )
 
-  if (error && !/exists|duplicate|already/i.test(error.message)) {
-    throw error
+    if (error && !/exists|duplicate|already/i.test(error.message)) {
+      throw formatStorageError(error)
+    }
   }
 
   return folder
@@ -301,10 +345,29 @@ export async function uploadMidiaAsset(
   folder = '',
 ): Promise<MediaItem> {
   const normalizedFolder = normalizeFolder(folder)
+  const mime = resolveMime(file)
   const path = buildStoragePath(normalizedFolder, file.name)
-  const bucket = bucketForMime(file.type)
+  const bucket = DEFAULT_BUCKET
 
-  const { publicUrl } = await uploadFile({ bucket, path, file, upsert: false })
+  if (normalizedFolder) {
+    await createMidiaFolder(normalizedFolder)
+  }
+
+  let publicUrl: string
+  try {
+    const typedFile =
+      file.type === mime
+        ? file
+        : new File([file], file.name, { type: mime, lastModified: file.lastModified })
+    ;({ publicUrl } = await uploadFile({
+      bucket,
+      path,
+      file: typedFile,
+      upsert: false,
+    }))
+  } catch (err) {
+    throw formatStorageError(err, file.name)
+  }
 
   const { data, error } = await supabase
     .from('midia')
@@ -313,9 +376,9 @@ export async function uploadMidiaAsset(
       bucket,
       path,
       public_url: publicUrl,
-      mime_type: file.type || null,
+      mime_type: mime || null,
       size_bytes: file.size,
-      media_type: mapMediaType(file.type),
+      media_type: mapMediaType(mime),
       alt: file.name,
       uploaded_by: uploadedBy ?? null,
     })
@@ -342,7 +405,7 @@ export async function uploadMidiaAssets(
       uploaded.push(await uploadMidiaAsset(file, uploadedBy, folder))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'erro desconhecido'
-      errors.push(`${file.name}: ${message}`)
+      errors.push(message.includes(file.name) ? message : `${file.name}: ${message}`)
     }
   }
 
