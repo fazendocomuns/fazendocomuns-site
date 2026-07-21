@@ -17,7 +17,14 @@ const FOLDER_KEEP_PNG = Uint8Array.from(
 
 function bucketForMime(mime: string): string {
   if (mime.startsWith('audio/')) return 'podcast'
-  if (mime === 'application/pdf' || mime.startsWith('application/')) return 'documentos'
+  if (
+    mime === 'application/pdf' ||
+    mime.startsWith('application/msword') ||
+    mime.includes('officedocument')
+  ) {
+    return 'documentos'
+  }
+  // Imagens e vídeos ficam em `fotos` (MIME ampliado na migration)
   return DEFAULT_BUCKET
 }
 
@@ -58,8 +65,8 @@ export function folderFromPath(path: string): string {
 }
 
 function buildStoragePath(folder: string, fileName: string): string {
-  const ext = fileName.split('.').pop() ?? 'bin'
-  const unique = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`
+  const ext = fileName.includes('.') ? (fileName.split('.').pop() ?? 'bin') : 'bin'
+  const unique = `${crypto.randomUUID()}.${ext.toLowerCase()}`
   const normalized = normalizeFolder(folder)
   return normalized ? `${normalized}/${unique}` : unique
 }
@@ -323,24 +330,67 @@ export async function uploadMidiaAssets(
   files: File[],
   uploadedBy?: string,
   folder = '',
-): Promise<MediaItem[]> {
-  const results: MediaItem[] = []
+  onProgress?: (done: number, total: number, fileName: string) => void,
+): Promise<{ uploaded: MediaItem[]; errors: string[] }> {
+  const uploaded: MediaItem[] = []
   const errors: string[] = []
 
-  for (const file of files) {
+  for (let i = 0; i < files.length; i += 1) {
+    const file = files[i]
+    onProgress?.(i, files.length, file.name)
     try {
-      results.push(await uploadMidiaAsset(file, uploadedBy, folder))
+      uploaded.push(await uploadMidiaAsset(file, uploadedBy, folder))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'erro desconhecido'
       errors.push(`${file.name}: ${message}`)
     }
   }
 
-  if (results.length === 0 && errors.length > 0) {
+  onProgress?.(files.length, files.length, '')
+
+  if (uploaded.length === 0 && errors.length > 0) {
     throw new Error(errors.join('\n'))
   }
 
-  return results
+  return { uploaded, errors }
+}
+
+/** Move um arquivo de mídia para outra pasta (ou raiz). */
+export async function moveMidiaAsset(id: string, targetFolderInput = '') {
+  const targetFolder = normalizeFolder(targetFolderInput)
+
+  const { data: row, error } = await supabase
+    .from('midia')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error) throw error
+
+  const currentFolder = folderFromPath(row.path)
+  if (currentFolder === targetFolder) {
+    return mapMidia(row)
+  }
+
+  const fileName = row.path.split('/').pop() ?? `${crypto.randomUUID()}.bin`
+  const nextPath = targetFolder ? `${targetFolder}/${fileName}` : fileName
+
+  const { error: moveError } = await supabase.storage.from(row.bucket).move(row.path, nextPath)
+  if (moveError) throw moveError
+
+  const { data: urlData } = supabase.storage.from(row.bucket).getPublicUrl(nextPath)
+  const { data, error: updateError } = await supabase
+    .from('midia')
+    .update({ path: nextPath, public_url: urlData.publicUrl })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (updateError) throw updateError
+
+  if (targetFolder) {
+    await createMidiaFolder(targetFolder).catch(() => undefined)
+  }
+
+  return mapMidia(data)
 }
 
 export async function deleteMidia(id: string) {

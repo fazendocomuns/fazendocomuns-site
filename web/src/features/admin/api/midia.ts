@@ -6,6 +6,7 @@ import {
   deleteMidiaFolder,
   fetchMidia,
   listMidiaFolders,
+  moveMidiaAsset,
   renameMidiaFolder,
   uploadMidiaAsset,
   uploadMidiaAssets,
@@ -73,8 +74,17 @@ export function useMidiaMutations() {
       onSuccess: invalidate,
     }),
     uploadMany: useMutation({
-      mutationFn: (input: { files: File[]; folder?: string }) =>
-        uploadMidiaAssets(input.files, user?.id, input.folder ?? ''),
+      mutationFn: (input: {
+        files: File[]
+        folder?: string
+        onProgress?: (done: number, total: number, fileName: string) => void
+      }) =>
+        uploadMidiaAssets(
+          input.files,
+          user?.id,
+          input.folder ?? '',
+          input.onProgress,
+        ),
       onSuccess: invalidate,
     }),
     createFolder: useMutation({
@@ -87,6 +97,11 @@ export function useMidiaMutations() {
     }),
     deleteFolder: useMutation({
       mutationFn: (folderPath: string) => deleteMidiaFolder(folderPath),
+      onSuccess: invalidate,
+    }),
+    moveFile: useMutation({
+      mutationFn: (input: { id: string; folder: string }) =>
+        moveMidiaAsset(input.id, input.folder),
       onSuccess: invalidate,
     }),
     remove: useMutation({

@@ -1,14 +1,14 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, type DragEvent } from 'react'
 import {
   ChevronRight,
   Folder,
+  FolderInput,
   FolderPlus,
   Home,
   ImageIcon,
   Loader2,
-  MoreVertical,
   Pencil,
   Search,
   Trash2,
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -31,12 +32,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { AdminPageHeader } from '@/features/admin/components/AdminPageHeader'
 import { EmptyState } from '@/features/admin/components/EmptyState'
 import {
@@ -54,7 +49,9 @@ import { cn } from '@/lib/utils'
 type MediaTypeFilter = 'all' | MediaItem['type']
 
 const ACCEPT =
-  'image/jpeg,image/png,image/webp,image/gif,video/mp4,audio/mpeg,audio/mp3,audio/wav,application/pdf'
+  'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,audio/mpeg,audio/mp3,audio/wav,application/pdf'
+
+const MEDIA_DRAG_TYPE = 'application/x-fazendo-media-id'
 
 function joinFolder(parent: string, child: string): string {
   const next = normalizeFolder(child)
@@ -84,7 +81,14 @@ function childFolders(allFolders: string[], current: string): string[] {
 export function MediaLibraryPage() {
   const { data: mediaLibrary = [], isLoading } = useMidiaLibrary()
   const { data: folders = [] } = useMidiaFolders()
-  const { uploadMany, createFolder, renameFolder, deleteFolder, remove } = useMidiaMutations()
+  const {
+    uploadMany,
+    createFolder,
+    renameFolder,
+    deleteFolder,
+    moveFile,
+    remove,
+  } = useMidiaMutations()
   const showToast = useAdminUiStore((s) => s.showToast)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -97,6 +101,12 @@ export function MediaLibraryPage() {
   const [renameTarget, setRenameTarget] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [moveItem, setMoveItem] = useState<MediaItem | null>(null)
+  const [moveFolder, setMoveFolder] = useState('__root__')
+  const [draggingUpload, setDraggingUpload] = useState(false)
+  const [draggingMediaId, setDraggingMediaId] = useState<string | null>(null)
+  const [dropTargetFolder, setDropTargetFolder] = useState<string | null>(null)
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null)
 
   const breadcrumb = useMemo(
     () => (currentFolder ? currentFolder.split('/') : []),
@@ -129,25 +139,54 @@ export function MediaLibraryPage() {
     )
   }, [mediaLibrary, currentFolder, search, typeFilter])
 
+  const moveOptions = useMemo(() => {
+    const options = [{ value: '__root__', label: 'Raiz (sem pasta)' }]
+    for (const folder of folders) {
+      options.push({ value: folder, label: folder })
+    }
+    return options
+  }, [folders])
+
   const busy =
     uploadMany.isPending ||
     createFolder.isPending ||
     renameFolder.isPending ||
     deleteFolder.isPending ||
+    moveFile.isPending ||
     remove.isPending
 
-  async function handleUploadFiles(fileList: FileList | File[]) {
-    const files = Array.from(fileList)
-    if (files.length === 0) return
+  async function handleUploadFiles(
+    fileList: FileList | File[],
+    targetFolder = currentFolder,
+  ) {
+    const files = Array.from(fileList).filter((file) => file.size > 0)
+    if (files.length === 0) {
+      showToast('Nenhum arquivo válido selecionado.', 'error')
+      return
+    }
 
+    setUploadProgress(`Enviando 0/${files.length}…`)
     try {
-      const uploaded = await uploadMany.mutateAsync({ files, folder: currentFolder })
-      const failed = files.length - uploaded.length
-      if (failed > 0) {
+      const { uploaded, errors } = await uploadMany.mutateAsync({
+        files,
+        folder: targetFolder,
+        onProgress: (done, total, fileName) => {
+          if (done >= total) {
+            setUploadProgress(`Finalizando ${total} arquivo(s)…`)
+            return
+          }
+          setUploadProgress(`Enviando ${done + 1}/${total}: ${fileName}`)
+        },
+      })
+      setUploadProgress(null)
+
+      if (errors.length > 0 && uploaded.length > 0) {
         showToast(
-          `${uploaded.length} enviado(s), ${failed} falhou/falharam.`,
-          uploaded.length ? 'success' : 'error',
+          `${uploaded.length} enviado(s). Falhas: ${errors.slice(0, 2).join(' · ')}`,
+          'error',
         )
+      } else if (errors.length > 0) {
+        showToast(errors.slice(0, 3).join('\n'), 'error')
       } else {
         showToast(
           files.length === 1
@@ -155,9 +194,43 @@ export function MediaLibraryPage() {
             : `${files.length} arquivos enviados com sucesso!`,
         )
       }
-    } catch {
-      showToast('Falha no upload. Tente novamente.', 'error')
+    } catch (err) {
+      setUploadProgress(null)
+      const message = err instanceof Error ? err.message : 'Falha no upload. Tente novamente.'
+      showToast(message, 'error')
     }
+  }
+
+  async function handleDropMove(mediaId: string, folder: string) {
+    const item = mediaLibrary.find((entry) => entry.id === mediaId)
+    if (!item) return
+    if ((item.folder ?? '') === folder) return
+
+    try {
+      await moveFile.mutateAsync({ id: mediaId, folder })
+      setPreviewItem(null)
+      showToast(folder ? `Arquivo movido para “${folder}”.` : 'Arquivo movido para a raiz.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Não foi possível mover o arquivo.'
+      showToast(message, 'error')
+    }
+  }
+
+  function getDragMediaId(event: DragEvent): string | null {
+    return (
+      draggingMediaId ||
+      event.dataTransfer.getData(MEDIA_DRAG_TYPE) ||
+      event.dataTransfer.getData('text/plain') ||
+      null
+    )
+  }
+
+  function hasOsFiles(event: DragEvent): boolean {
+    return !draggingMediaId && Array.from(event.dataTransfer.types).includes('Files')
+  }
+
+  function isInternalMediaDrag(_event?: DragEvent): boolean {
+    return Boolean(draggingMediaId)
   }
 
   async function handleCreateFolder() {
@@ -224,6 +297,21 @@ export function MediaLibraryPage() {
     }
   }
 
+  async function handleMoveFile() {
+    if (!moveItem) return
+    const folder = moveFolder === '__root__' ? '' : moveFolder
+
+    try {
+      await moveFile.mutateAsync({ id: moveItem.id, folder })
+      setMoveItem(null)
+      setPreviewItem(null)
+      showToast(folder ? `Arquivo movido para “${folder}”.` : 'Arquivo movido para a raiz.')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Não foi possível mover o arquivo.'
+      showToast(message, 'error')
+    }
+  }
+
   async function handleDeleteFile(item: MediaItem) {
     try {
       await remove.mutateAsync(item.id)
@@ -239,7 +327,7 @@ export function MediaLibraryPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Biblioteca de mídia"
-        description="Organize arquivos em pastas e envie vários de uma vez."
+        description="Organize arquivos em pastas, envie vários de uma vez e mova entre pastas."
         actions={
           <>
             <input
@@ -279,6 +367,52 @@ export function MediaLibraryPage() {
         }
       />
 
+      <button
+        type="button"
+        disabled={!isSupabaseReady() || busy}
+        onClick={() => fileInputRef.current?.click()}
+        onDragEnter={(e) => {
+          e.preventDefault()
+          if (isInternalMediaDrag(e)) return
+          setDraggingUpload(true)
+        }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          if (isInternalMediaDrag(e)) return
+          setDraggingUpload(true)
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault()
+          setDraggingUpload(false)
+        }}
+        onDrop={(e) => {
+          e.preventDefault()
+          setDraggingUpload(false)
+          if (isInternalMediaDrag(e)) return
+          if (e.dataTransfer.files?.length) {
+            void handleUploadFiles(e.dataTransfer.files)
+          }
+        }}
+        className={cn(
+          'flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-8 text-center transition-colors',
+          draggingUpload
+            ? 'border-brand-red bg-brand-red/5'
+            : 'border-border/70 bg-muted/30 hover:border-border hover:bg-muted/50',
+          (!isSupabaseReady() || busy) && 'pointer-events-none opacity-60',
+        )}
+      >
+        <Upload className="size-6 text-muted-foreground" />
+        <p className="font-ui text-sm font-medium">
+          {uploadProgress ??
+            (currentFolder
+              ? `Solte vários arquivos aqui (pasta: ${currentFolder})`
+              : 'Solte vários arquivos aqui ou clique para selecionar')}
+        </p>
+        <p className="font-ui text-xs text-muted-foreground">
+          Selecione vários de uma vez (Ctrl/Cmd) · arraste um arquivo da grade para outra pasta
+        </p>
+      </button>
+
       <nav
         aria-label="Pasta atual"
         className="flex flex-wrap items-center gap-1 font-ui text-sm text-muted-foreground"
@@ -286,9 +420,29 @@ export function MediaLibraryPage() {
         <button
           type="button"
           onClick={() => setCurrentFolder('')}
+          onDragOver={(e) => {
+            e.preventDefault()
+            if (isInternalMediaDrag(e) || hasOsFiles(e)) {
+              setDropTargetFolder('')
+            }
+          }}
+          onDragLeave={() => setDropTargetFolder((prev) => (prev === '' ? null : prev))}
+          onDrop={(e) => {
+            e.preventDefault()
+            setDropTargetFolder(null)
+            const mediaId = getDragMediaId(e)
+            if (mediaId) {
+              void handleDropMove(mediaId, '')
+              return
+            }
+            if (e.dataTransfer.files?.length) {
+              void handleUploadFiles(e.dataTransfer.files, '')
+            }
+          }}
           className={cn(
             'inline-flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-muted hover:text-foreground',
             !currentFolder && 'bg-muted font-medium text-foreground',
+            dropTargetFolder === '' && 'ring-2 ring-brand-red bg-brand-red/10 text-foreground',
           )}
         >
           <Home className="size-3.5" />
@@ -303,9 +457,32 @@ export function MediaLibraryPage() {
               <button
                 type="button"
                 onClick={() => setCurrentFolder(path)}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  if (isInternalMediaDrag(e) || hasOsFiles(e)) {
+                    setDropTargetFolder(path)
+                  }
+                }}
+                onDragLeave={() =>
+                  setDropTargetFolder((prev) => (prev === path ? null : prev))
+                }
+                onDrop={(e) => {
+                  e.preventDefault()
+                  setDropTargetFolder(null)
+                  const mediaId = getDragMediaId(e)
+                  if (mediaId) {
+                    void handleDropMove(mediaId, path)
+                    return
+                  }
+                  if (e.dataTransfer.files?.length) {
+                    void handleUploadFiles(e.dataTransfer.files, path)
+                  }
+                }}
                 className={cn(
                   'rounded-md px-2 py-1 transition-colors hover:bg-muted hover:text-foreground',
                   isLast && 'bg-muted font-medium text-foreground',
+                  dropTargetFolder === path &&
+                    'ring-2 ring-brand-red bg-brand-red/10 text-foreground',
                 )}
               >
                 {segment}
@@ -362,59 +539,95 @@ export function MediaLibraryPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {subfolders.map((name) => {
             const next = joinFolder(currentFolder, name)
+            const isDropTarget = dropTargetFolder === next
             return (
               <div
                 key={next}
-                className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card text-left transition-shadow hover:shadow-md"
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (isInternalMediaDrag(e) || hasOsFiles(e)) {
+                    setDropTargetFolder(next)
+                  }
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault()
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                    setDropTargetFolder((prev) => (prev === next ? null : prev))
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setDropTargetFolder(null)
+                  const mediaId = getDragMediaId(e)
+                  if (mediaId) {
+                    void handleDropMove(mediaId, next)
+                    return
+                  }
+                  if (e.dataTransfer.files?.length) {
+                    void handleUploadFiles(e.dataTransfer.files, next)
+                  }
+                }}
+                className={cn(
+                  'overflow-hidden rounded-2xl border bg-card shadow-sm transition-colors',
+                  isDropTarget
+                    ? 'border-brand-red ring-2 ring-brand-red/40'
+                    : 'border-border/60',
+                )}
               >
                 <button
                   type="button"
                   onClick={() => setCurrentFolder(next)}
                   className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <div className="flex aspect-square items-center justify-center bg-amber-50">
-                    <Folder className="size-14 text-amber-700/80 transition-transform group-hover:scale-105" />
+                  <div
+                    className={cn(
+                      'flex aspect-[4/3] items-center justify-center',
+                      isDropTarget ? 'bg-brand-red/10' : 'bg-amber-50',
+                    )}
+                  >
+                    <Folder
+                      className={cn(
+                        'size-14',
+                        isDropTarget ? 'text-brand-red' : 'text-amber-700/80',
+                      )}
+                    />
                   </div>
-                  <div className="space-y-1 p-3 pr-10">
+                  <div className="space-y-1 border-b border-border/50 px-3 py-2.5">
                     <p className="truncate font-ui text-sm font-medium">{name}</p>
-                    <p className="font-ui text-xs text-muted-foreground">Pasta</p>
+                    <p className="font-ui text-xs text-muted-foreground">
+                      {isDropTarget ? 'Solte para mover/enviar' : 'Pasta'}
+                    </p>
                   </div>
                 </button>
 
-                <div className="absolute right-2 top-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="secondary"
-                        className="size-8 bg-white/90 shadow-sm"
-                        disabled={!isSupabaseReady() || busy}
-                        aria-label={`Opções da pasta ${name}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreVertical className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenuItem
-                        onSelect={() => {
-                          setRenameTarget(next)
-                          setRenameValue(name)
-                        }}
-                      >
-                        <Pencil className="size-4" />
-                        Renomear
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onSelect={() => setDeleteTarget(next)}
-                      >
-                        <Trash2 className="size-4" />
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <div className="flex gap-2 p-2.5">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="h-9 flex-1 justify-center gap-1.5"
+                    disabled={!isSupabaseReady() || busy}
+                    onClick={() => {
+                      setRenameTarget(next)
+                      setRenameValue(name)
+                    }}
+                  >
+                    <Pencil className="size-3.5" />
+                    Editar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 flex-1 justify-center gap-1.5 border-destructive/35 text-destructive hover:bg-destructive/10"
+                    disabled={!isSupabaseReady() || busy}
+                    onClick={() => setDeleteTarget(next)}
+                  >
+                    <Trash2 className="size-3.5" />
+                    Excluir
+                  </Button>
                 </div>
               </div>
             )
@@ -424,14 +637,26 @@ export function MediaLibraryPage() {
             <button
               key={item.id}
               type="button"
+              draggable={isSupabaseReady() && !busy}
+              onDragStart={(e) => {
+                setDraggingMediaId(item.id)
+                e.dataTransfer.setData(MEDIA_DRAG_TYPE, item.id)
+                e.dataTransfer.setData('text/plain', item.id)
+                e.dataTransfer.effectAllowed = 'move'
+              }}
+              onDragEnd={() => {
+                setDraggingMediaId(null)
+                setDropTargetFolder(null)
+              }}
               onClick={() => setPreviewItem(item)}
-              className="group overflow-hidden rounded-2xl border border-border/60 bg-card text-left transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group cursor-grab overflow-hidden rounded-2xl border border-border/60 bg-card text-left transition-shadow hover:shadow-md active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <div className="relative aspect-square overflow-hidden bg-muted">
+              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                 {item.type === 'image' ? (
                   <img
                     src={item.url}
                     alt={item.alt}
+                    draggable={false}
                     className="size-full object-cover transition-transform group-hover:scale-105"
                   />
                 ) : (
@@ -504,7 +729,7 @@ export function MediaLibraryPage() {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Renomear pasta</DialogTitle>
+            <DialogTitle>Editar pasta</DialogTitle>
             <DialogDescription>
               Arquivos e subpastas serão movidos junto com o novo nome.
             </DialogDescription>
@@ -579,6 +804,54 @@ export function MediaLibraryPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={Boolean(moveItem)}
+        onOpenChange={(open) => {
+          if (!open) setMoveItem(null)
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mover arquivo</DialogTitle>
+            <DialogDescription>
+              Escolha a pasta de destino para “{moveItem?.name}”.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="move-folder">Pasta de destino</Label>
+            <Select value={moveFolder} onValueChange={setMoveFolder}>
+              <SelectTrigger id="move-folder">
+                <SelectValue placeholder="Selecione a pasta" />
+              </SelectTrigger>
+              <SelectContent>
+                {moveOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setMoveItem(null)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={moveFile.isPending}
+              onClick={() => void handleMoveFile()}
+            >
+              {moveFile.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <FolderInput className="size-4" />
+              )}
+              Mover
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={Boolean(previewItem)} onOpenChange={(open) => !open && setPreviewItem(null)}>
         <DialogContent className="max-w-2xl">
           {previewItem && (
@@ -586,7 +859,7 @@ export function MediaLibraryPage() {
               <DialogHeader>
                 <DialogTitle>{previewItem.name}</DialogTitle>
                 <DialogDescription>
-                  {previewItem.folder ? `${previewItem.folder} · ` : ''}
+                  {previewItem.folder ? `${previewItem.folder} · ` : 'Raiz · '}
                   {previewItem.alt} · {previewItem.size} ·{' '}
                   {formatRelativeDate(previewItem.uploadedAt)}
                 </DialogDescription>
@@ -608,9 +881,21 @@ export function MediaLibraryPage() {
                 </div>
               )}
               <p className="break-all font-ui text-xs text-muted-foreground">{previewItem.url}</p>
-              <DialogFooter>
+              <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
                 <Button type="button" variant="outline" onClick={() => setPreviewItem(null)}>
                   Fechar
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!isSupabaseReady() || busy}
+                  onClick={() => {
+                    setMoveFolder(previewItem.folder ? previewItem.folder : '__root__')
+                    setMoveItem(previewItem)
+                  }}
+                >
+                  <FolderInput className="size-4" />
+                  Mover para pasta
                 </Button>
                 <Button
                   type="button"
