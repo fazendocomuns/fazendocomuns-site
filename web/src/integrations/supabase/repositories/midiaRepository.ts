@@ -6,7 +6,14 @@ import type { Database } from '@/types/database'
 type MidiaRow = Database['public']['Tables']['midia']['Row']
 
 const DEFAULT_BUCKET = 'fotos'
-const FOLDER_KEEP = '.keep'
+/** Marcador de pasta vazia — precisa ser image/* por causa do MIME do bucket `fotos`. */
+const FOLDER_KEEP = '.keep.png'
+const FOLDER_KEEP_PNG = Uint8Array.from(
+  atob(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  ),
+  (c) => c.charCodeAt(0),
+)
 
 function bucketForMime(mime: string): string {
   if (mime.startsWith('audio/')) return 'podcast'
@@ -144,12 +151,16 @@ export async function createMidiaFolder(folderInput: string) {
   if (!folder) throw new Error('Informe um nome de pasta válido.')
 
   const path = `${folder}/${FOLDER_KEEP}`
-  const { error } = await supabase.storage.from(DEFAULT_BUCKET).upload(path, new Blob(['']), {
-    upsert: true,
-    contentType: 'text/plain',
-  })
+  const { error } = await supabase.storage.from(DEFAULT_BUCKET).upload(
+    path,
+    new Blob([FOLDER_KEEP_PNG], { type: 'image/png' }),
+    {
+      upsert: true,
+      contentType: 'image/png',
+    },
+  )
 
-  if (error && !/exists|duplicate/i.test(error.message)) {
+  if (error && !/exists|duplicate|already/i.test(error.message)) {
     throw error
   }
 

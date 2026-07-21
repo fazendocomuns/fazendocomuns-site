@@ -156,8 +156,9 @@ export function MediaLibraryPage() {
       setNewFolderName('')
       setCurrentFolder(created)
       showToast('Pasta criada!')
-    } catch {
-      showToast('Não foi possível criar a pasta.', 'error')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Não foi possível criar a pasta.'
+      showToast(message, 'error')
     }
   }
 
