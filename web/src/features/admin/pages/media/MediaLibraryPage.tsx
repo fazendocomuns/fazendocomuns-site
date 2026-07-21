@@ -49,7 +49,7 @@ import { cn } from '@/lib/utils'
 type MediaTypeFilter = 'all' | MediaItem['type']
 
 const ACCEPT =
-  'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,audio/mpeg,audio/mp3,audio/wav,application/pdf'
+  'image/*,video/*,audio/*,application/pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.mp4,.webm,.mov,.mp3,.wav,.pdf'
 
 const MEDIA_DRAG_TYPE = 'application/x-fazendo-media-id'
 

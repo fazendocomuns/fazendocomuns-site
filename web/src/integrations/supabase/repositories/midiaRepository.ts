@@ -24,6 +24,9 @@ const EXT_MIME: Record<string, string> = {
   webp: 'image/webp',
   gif: 'image/gif',
   svg: 'image/svg+xml',
+  heic: 'image/heic',
+  heif: 'image/heif',
+  avif: 'image/avif',
   mp4: 'video/mp4',
   webm: 'video/webm',
   mov: 'video/quicktime',
@@ -36,23 +39,115 @@ const EXT_MIME: Record<string, string> = {
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 }
 
-function resolveMime(file: File): string {
-  if (file.type && file.type !== 'application/octet-stream') return file.type
-  const ext = file.name.includes('.')
-    ? (file.name.split('.').pop() ?? '').toLowerCase()
-    : ''
-  return EXT_MIME[ext] || 'application/octet-stream'
+const MIME_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'image/svg+xml': 'svg',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
+  'image/avif': 'avif',
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
+  'audio/mpeg': 'mp3',
+  'audio/mp3': 'mp3',
+  'audio/wav': 'wav',
+  'audio/x-wav': 'wav',
+  'audio/aac': 'aac',
+  'audio/mp4': 'm4a',
+  'application/pdf': 'pdf',
 }
 
-function formatStorageError(err: unknown, fileName?: string): Error {
+function extensionFromName(fileName: string): string {
+  if (!fileName.includes('.')) return ''
+  const ext = (fileName.split('.').pop() ?? '').toLowerCase()
+  if (!ext || ext.length > 8 || !/^[a-z0-9]+$/.test(ext)) return ''
+  return ext
+}
+
+/** Detecta MIME pelos magic bytes quando o browser não informa o tipo. */
+async function sniffMimeFromBytes(file: File): Promise<string | null> {
+  const buffer = await file.slice(0, 16).arrayBuffer()
+  const bytes = new Uint8Array(buffer)
+  if (bytes.length < 4) return null
+
+  // JPEG
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg'
+  // PNG
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+    return 'image/png'
+  }
+  // GIF
+  if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) return 'image/gif'
+  // WEBP: RIFF....WEBP
+  if (
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  ) {
+    return 'image/webp'
+  }
+  // PDF
+  if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+    return 'application/pdf'
+  }
+  // MP3 ID3
+  if (bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) return 'audio/mpeg'
+  // MP3 frame sync
+  if (bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0) return 'audio/mpeg'
+  // WAV: RIFF....WAVE
+  if (
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x41 &&
+    bytes[10] === 0x56 &&
+    bytes[11] === 0x45
+  ) {
+    return 'audio/wav'
+  }
+  // MP4/MOV/M4A: ....ftyp
+  if (bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70) {
+    const brand = String.fromCharCode(bytes[8] ?? 0, bytes[9] ?? 0, bytes[10] ?? 0, bytes[11] ?? 0)
+    if (brand.startsWith('qt')) return 'video/quicktime'
+    if (brand.includes('M4A') || brand.includes('mp4a')) return 'audio/mp4'
+    return 'video/mp4'
+  }
+
+  return null
+}
+
+async function resolveMime(file: File): Promise<string> {
+  if (file.type && file.type !== 'application/octet-stream') return file.type
+
+  const ext = extensionFromName(file.name)
+  if (ext && EXT_MIME[ext]) return EXT_MIME[ext]
+
+  const sniffed = await sniffMimeFromBytes(file)
+  if (sniffed) return sniffed
+
+  return 'application/octet-stream'
+}
+
+function formatStorageError(err: unknown, fileName?: string, mime?: string): Error {
   const message = err instanceof Error ? err.message : String(err)
   const prefix = fileName ? `${fileName}: ` : ''
-  if (/mime|not allowed|invalid.*type/i.test(message)) {
+  const mimeHint = mime ? ` (tipo detectado: ${mime})` : ''
+  if (/mime type|not supported|invalid.*mime|content.?type/i.test(message)) {
     return new Error(
-      `${prefix}tipo de arquivo não permitido no Storage. Use JPG, PNG, WebP, GIF, MP4, MP3 ou PDF.`,
+      `${prefix}tipo de arquivo não permitido no Storage${mimeHint}. Tente renomear com extensão (.jpg, .png, .mp4…). Detalhe: ${message}`,
     )
   }
-  if (/payload|too large|maximum|size|413/i.test(message)) {
+  if (/payload|too large|maximum|413/i.test(message)) {
     return new Error(`${prefix}arquivo grande demais (limite 100 MB).`)
   }
   if (/row-level security|permission|not authorized|jwt/i.test(message)) {
@@ -101,9 +196,11 @@ export function folderFromPath(path: string): string {
   return parts.slice(0, -1).join('/')
 }
 
-function buildStoragePath(folder: string, fileName: string): string {
-  const ext = fileName.includes('.') ? (fileName.split('.').pop() ?? 'bin') : 'bin'
-  const unique = `${crypto.randomUUID()}.${ext.toLowerCase()}`
+function buildStoragePath(folder: string, fileName: string, mime: string): string {
+  const fromName = extensionFromName(fileName)
+  const fromMime = MIME_EXT[mime] ?? ''
+  const ext = fromName || fromMime || 'bin'
+  const unique = `${crypto.randomUUID()}.${ext}`
   const normalized = normalizeFolder(folder)
   return normalized ? `${normalized}/${unique}` : unique
 }
@@ -345,8 +442,8 @@ export async function uploadMidiaAsset(
   folder = '',
 ): Promise<MediaItem> {
   const normalizedFolder = normalizeFolder(folder)
-  const mime = resolveMime(file)
-  const path = buildStoragePath(normalizedFolder, file.name)
+  const mime = await resolveMime(file)
+  const path = buildStoragePath(normalizedFolder, file.name, mime)
   const bucket = DEFAULT_BUCKET
 
   if (normalizedFolder) {
@@ -355,10 +452,14 @@ export async function uploadMidiaAsset(
 
   let publicUrl: string
   try {
-    const typedFile =
-      file.type === mime
-        ? file
-        : new File([file], file.name, { type: mime, lastModified: file.lastModified })
+    const displayName =
+      extensionFromName(file.name) || !MIME_EXT[mime]
+        ? file.name
+        : `${file.name}.${MIME_EXT[mime]}`
+    const typedFile = new File([file], displayName, {
+      type: mime,
+      lastModified: file.lastModified,
+    })
     ;({ publicUrl } = await uploadFile({
       bucket,
       path,
@@ -366,7 +467,7 @@ export async function uploadMidiaAsset(
       upsert: false,
     }))
   } catch (err) {
-    throw formatStorageError(err, file.name)
+    throw formatStorageError(err, file.name, mime)
   }
 
   const { data, error } = await supabase
