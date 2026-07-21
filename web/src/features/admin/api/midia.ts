@@ -1,15 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { isSupabaseConfigured } from '@/lib/supabase/env'
 import {
+  createMidiaFolder,
   deleteMidia,
   fetchMidia,
+  listMidiaFolders,
   uploadMidiaAsset,
+  uploadMidiaAssets,
 } from '@/integrations/supabase/repositories/midiaRepository'
 import { useAdminStore } from '@/features/admin/store/adminStore'
 import { useAuth } from '@/features/admin/hooks/useAuth'
 
 export const midiaKeys = {
   all: ['admin', 'midia'] as const,
+  folders: ['admin', 'midia', 'folders'] as const,
+}
+
+export type MidiaUploadInput = File | { file: File; folder?: string }
+
+function resolveUpload(input: MidiaUploadInput): { file: File; folder: string } {
+  if (input instanceof File) return { file: input, folder: '' }
+  return { file: input.file, folder: input.folder ?? '' }
 }
 
 export function useMidiaLibrary() {
@@ -29,15 +40,43 @@ export function useMidiaLibrary() {
   return query
 }
 
+export function useMidiaFolders() {
+  const enabled = isSupabaseConfigured()
+  return useQuery({
+    queryKey: midiaKeys.folders,
+    queryFn: listMidiaFolders,
+    enabled,
+    staleTime: 30_000,
+    initialData: enabled ? undefined : [],
+  })
+}
+
 export function useMidiaMutations() {
   const queryClient = useQueryClient()
   const { user } = useAuth()
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: midiaKeys.all })
+  const invalidate = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: midiaKeys.all }),
+      queryClient.invalidateQueries({ queryKey: midiaKeys.folders }),
+    ])
+  }
 
   return {
     upload: useMutation({
-      mutationFn: (file: File) => uploadMidiaAsset(file, user?.id),
+      mutationFn: (input: MidiaUploadInput) => {
+        const { file, folder } = resolveUpload(input)
+        return uploadMidiaAsset(file, user?.id, folder)
+      },
+      onSuccess: invalidate,
+    }),
+    uploadMany: useMutation({
+      mutationFn: (input: { files: File[]; folder?: string }) =>
+        uploadMidiaAssets(input.files, user?.id, input.folder ?? ''),
+      onSuccess: invalidate,
+    }),
+    createFolder: useMutation({
+      mutationFn: (folderPath: string) => createMidiaFolder(folderPath),
       onSuccess: invalidate,
     }),
     remove: useMutation({

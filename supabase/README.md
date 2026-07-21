@@ -9,11 +9,18 @@ Migrations e configuração do backend Supabase para o projeto.
 
 ## Projeto remoto (dev/prod)
 
+Na raiz do repositório:
+
 ```bash
-# Na raiz do repositório
 supabase login
 supabase link --project-ref <SEU_PROJECT_REF>
 supabase db push
+```
+
+Para empurrar também as URLs de Auth definidas em `config.toml`:
+
+```bash
+supabase config push
 ```
 
 ## Desenvolvimento local
@@ -25,26 +32,36 @@ supabase db reset   # aplica todas as migrations
 
 Studio local: http://localhost:54323
 
-## Variáveis no frontend
+## Variáveis no frontend (Next.js)
 
 ```bash
-cd frontend
+cd web
 cp .env.example .env
 ```
 
-Preencha após criar o projeto:
+Preencha após criar o projeto (Project Settings → API):
 
 ```env
-VITE_SUPABASE_URL=https://<ref>.supabase.co
-VITE_SUPABASE_ANON_KEY=<anon_key>
-VITE_USE_SUPABASE=false   # true quando integração estiver pronta
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
+NEXT_PUBLIC_USE_SUPABASE=false   # true quando integração estiver pronta
 ```
+
+Na Vercel (Root Directory = `web`), use as mesmas variáveis com `NEXT_PUBLIC_SITE_URL` apontando para a URL pública.
+
+## Auth URLs
+
+Em Authentication → URL Configuration (ou via `config.toml` + `supabase config push`):
+
+- Site URL: `http://localhost:3000` (dev) / URL de produção depois
+- Redirect URLs: localhost + domínio Vercel (`https://fazendocomuns.vercel.app`, etc.)
 
 ## Gerar tipos TypeScript
 
 ```bash
-cd frontend
-npm run supabase:types
+cd web
+npx supabase gen types typescript --linked > src/types/database.ts
 ```
 
 ## Migrations
@@ -61,46 +78,22 @@ npm run supabase:types
 | `000008` | `paginas_conteudo` |
 | `000009` | Políticas RLS |
 | `000010` | Buckets Storage + políticas |
-| `000011` | Seed equipe (pesquisadores, assistentes, consultores, colaboradores) |
+| `000011` | Seed equipe |
 | `000012` | Seed notícias, editoriais, eventos |
+| `000013` | Seed restante |
+| `000014` | Seed completo |
 
-## Seed da equipe
-
-Conteúdo migrado de `frontend/src/features/projeto/data/equipeContent.ts`, `consultoresContent.ts` e `colaboradoresContent.ts`.
-
-```bash
-# 1. Sincronizar fotos para URLs estáveis (/imgs/...)
-cd frontend
-npm run seed:equipe
-
-# 2. Aplicar seed no banco (na raiz do repositório)
-cd ..
-supabase db push
-```
-
-O seed é idempotente (upsert por `slug`). E-mails de assistentes/consultores usam placeholder `equipe+{slug}@fazendocomuns.org` — atualize no admin quando tiver os e-mails reais.
-
-Para regenerar o SQL após editar o script gerador:
-
-```bash
-cd frontend && npm run seed:equipe:generate
-```
-
-## Seed de conteúdo editorial
-
-```bash
-cd frontend && npm run seed:content:generate
-cd .. && supabase db push
-```
-
-Insere 3 notícias, 2 editoriais e 2 eventos (upsert por `slug`).
+Os seeds são idempotentes (upsert por `slug`).
 
 ## Primeiro usuário admin
 
-Após criar usuário no Dashboard (Authentication → Users):
+Após criar usuário no Dashboard (Authentication → Users) ou via Auth Admin API:
 
 ```sql
 UPDATE public.profiles
 SET role = 'admin'
-WHERE email = 'seu-email@ufrj.br';
+WHERE email = 'seu-email@exemplo.com';
 ```
+
+Login local: http://localhost:3000/admin/login  
+(com `NEXT_PUBLIC_USE_SUPABASE=true` no `web/.env`)

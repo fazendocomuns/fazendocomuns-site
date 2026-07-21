@@ -24,3 +24,9 @@ coverage/
 .DS_Store
 .vscode/
 .idea/
+
+# Credenciais locais de setup
+**/.admin-credentials.local
+
+.vercel
+.env*

@@ -180,10 +180,12 @@ export interface MediaItem {
   id: string
   name: string
   url: string
-  type: 'image' | 'video' | 'document'
+  type: 'image' | 'video' | 'document' | 'audio'
   size: string
   uploadedAt: string
   alt: string
+  /** Prefixo de pasta no Storage (ex.: `podcast/episodios`). Vazio = raiz. */
+  folder?: string
 }
 
 export interface ActivityItem {

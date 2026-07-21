@@ -28,11 +28,23 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://localhost:5173"
-additional_redirect_urls = ["http://localhost:5173/admin"]
+site_url = "http://localhost:3000"
+additional_redirect_urls = [
+  "http://localhost:3000",
+  "http://localhost:3000/admin",
+  "http://localhost:3000/admin/reset-password",
+  "https://fazendocomuns.vercel.app",
+  "https://fazendocomuns.vercel.app/admin",
+  "https://fazendocomuns.vercel.app/admin/reset-password",
+  "https://fazendocomuns-fazendo-comuns.vercel.app",
+  "https://fazendocomuns-fazendo-comuns.vercel.app/admin",
+  "https://fazendocomuns-git-main-fazendo-comuns.vercel.app",
+]
 jwt_expiry = 3600
 enable_signup = false
 
 [auth.email]
 enable_signup = false
 enable_confirmations = true
+# Login por e-mail/senha deve permanecer habilitado no Dashboard
+# (Authentication → Providers → Email). Signup público continua off.
