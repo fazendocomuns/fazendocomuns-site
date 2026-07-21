@@ -5,8 +5,10 @@ import type { Database } from '@/types/database'
 
 type MidiaRow = Database['public']['Tables']['midia']['Row']
 
-/** Bucket único da biblioteca — pastas e arquivos ficam no mesmo lugar no Storage. */
-const DEFAULT_BUCKET = 'fotos'
+/** Buckets da biblioteca de mídia (por tipo de arquivo). */
+const LIBRARY_BUCKETS = ['fotos', 'podcast', 'livros', 'documentos'] as const
+type LibraryBucket = (typeof LIBRARY_BUCKETS)[number]
+
 /** Marcador visível de pasta vazia (image/png). */
 const FOLDER_KEEP = '_keep.png'
 const LEGACY_FOLDER_KEEP = '.keep.png'
@@ -196,13 +198,72 @@ export function folderFromPath(path: string): string {
   return parts.slice(0, -1).join('/')
 }
 
-function buildStoragePath(folder: string, fileName: string, mime: string): string {
-  const fromName = extensionFromName(fileName)
-  const fromMime = MIME_EXT[mime] ?? ''
-  const ext = fromName || fromMime || 'bin'
-  const unique = `${crypto.randomUUID()}.${ext}`
+function bucketForMime(mime: string): LibraryBucket {
+  if (mime.startsWith('audio/')) return 'podcast'
+  if (
+    mime === 'application/pdf' ||
+    mime.startsWith('application/msword') ||
+    mime.includes('officedocument')
+  ) {
+    return 'livros'
+  }
+  if (mime.startsWith('text/')) return 'documentos'
+  // Imagens e vídeos
+  return 'fotos'
+}
+
+function sanitizeBaseName(fileName: string): string {
+  const withoutExt = fileName.includes('.')
+    ? fileName.slice(0, fileName.lastIndexOf('.'))
+    : fileName
+  const clean = withoutExt
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._\-\s]+/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^[-.]+|[-.]+$/g, '')
+    .slice(0, 120)
+  return clean || 'arquivo'
+}
+
+function buildPreferredFileName(fileName: string, mime: string): string {
+  const ext = extensionFromName(fileName) || MIME_EXT[mime] || 'bin'
+  return `${sanitizeBaseName(fileName)}.${ext}`
+}
+
+async function storageObjectExists(bucket: string, path: string): Promise<boolean> {
+  const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''
+  const name = path.includes('/') ? path.slice(path.lastIndexOf('/') + 1) : path
+  const { data, error } = await supabase.storage.from(bucket).list(folder || undefined, {
+    limit: 1000,
+    search: name,
+  })
+  if (error || !data) return false
+  return data.some((entry) => entry.name === name)
+}
+
+/** Caminho no Storage com nome legível; se já existir, sufixa -2, -3… */
+async function buildStoragePath(
+  bucket: string,
+  folder: string,
+  fileName: string,
+  mime: string,
+): Promise<string> {
+  const preferred = buildPreferredFileName(fileName, mime)
+  const ext = extensionFromName(preferred) || MIME_EXT[mime] || 'bin'
+  const base = sanitizeBaseName(preferred)
   const normalized = normalizeFolder(folder)
-  return normalized ? `${normalized}/${unique}` : unique
+
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const name = attempt === 0 ? `${base}.${ext}` : `${base}-${attempt + 1}.${ext}`
+    const path = normalized ? `${normalized}/${name}` : name
+    if (!(await storageObjectExists(bucket, path))) return path
+  }
+
+  const fallback = `${base}-${crypto.randomUUID().slice(0, 8)}.${ext}`
+  return normalized ? `${normalized}/${fallback}` : fallback
 }
 
 function mapMediaType(mime: string): Database['public']['Enums']['media_type'] {
@@ -244,7 +305,7 @@ export async function fetchMidia() {
   return (data ?? []).map(mapMidia)
 }
 
-/** Lista pastas conhecidas (prefixos em midia + marcadores .keep no Storage). */
+/** Lista pastas conhecidas (prefixos em midia + marcadores no Storage). */
 export async function listMidiaFolders(): Promise<string[]> {
   const folders = new Set<string>()
 
@@ -257,8 +318,8 @@ export async function listMidiaFolders(): Promise<string[]> {
     }
   }
 
-  async function walk(prefix: string) {
-    const { data, error } = await supabase.storage.from(DEFAULT_BUCKET).list(prefix || undefined, {
+  async function walk(bucket: string, prefix: string) {
+    const { data, error } = await supabase.storage.from(bucket).list(prefix || undefined, {
       limit: 1000,
       sortBy: { column: 'name', order: 'asc' },
     })
@@ -270,34 +331,31 @@ export async function listMidiaFolders(): Promise<string[]> {
         if (prefix) folders.add(prefix)
         continue
       }
-      // No Storage, pastas vêm com id null
       if (entry.id === null) {
         folders.add(fullPath)
-        await walk(fullPath)
+        await walk(bucket, fullPath)
       }
     }
   }
 
-  try {
-    await walk('')
-  } catch {
-    // Storage list é complementar; pastas derivadas de midia já bastam
+  for (const bucket of LIBRARY_BUCKETS) {
+    try {
+      await walk(bucket, '')
+    } catch {
+      // Storage list é complementar
+    }
   }
 
   return [...folders].sort((a, b) => a.localeCompare(b, 'pt-BR'))
 }
 
-export async function createMidiaFolder(folderInput: string) {
-  const folder = normalizeFolder(folderInput)
-  if (!folder) throw new Error('Informe um nome de pasta válido.')
-
-  // Garante cada nível do caminho no Storage (ex.: equipes/colaboradores)
-  const segments = folder.split('/')
+async function ensureFolderInBucket(bucket: LibraryBucket, folder: string) {
+  const segments = folder.split('/').filter(Boolean)
   let current = ''
   for (const segment of segments) {
     current = current ? `${current}/${segment}` : segment
     const path = `${current}/${FOLDER_KEEP}`
-    const { error } = await supabase.storage.from(DEFAULT_BUCKET).upload(
+    const { error } = await supabase.storage.from(bucket).upload(
       path,
       new Blob([FOLDER_KEEP_PNG], { type: 'image/png' }),
       {
@@ -311,11 +369,39 @@ export async function createMidiaFolder(folderInput: string) {
       throw formatStorageError(error)
     }
   }
+}
+
+export async function createMidiaFolder(folderInput: string) {
+  const folder = normalizeFolder(folderInput)
+  if (!folder) throw new Error('Informe um nome de pasta válido.')
+
+  // Cria a pasta em todos os buckets da biblioteca (fotos, podcast, livros, documentos)
+  const errors: string[] = []
+  for (const bucket of LIBRARY_BUCKETS) {
+    try {
+      await ensureFolderInBucket(bucket, folder)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      errors.push(`${bucket}: ${message}`)
+    }
+  }
+
+  if (errors.length === LIBRARY_BUCKETS.length) {
+    throw new Error(errors.join('\n'))
+  }
 
   return folder
 }
 
-const MEDIA_BUCKETS = ['fotos', 'podcast', 'documentos', 'avatars', 'editoriais', 'noticias', 'livros'] as const
+const MEDIA_BUCKETS = [
+  'fotos',
+  'podcast',
+  'documentos',
+  'avatars',
+  'editoriais',
+  'noticias',
+  'livros',
+] as const
 
 async function listStoragePathsUnder(bucket: string, folder: string): Promise<string[]> {
   const paths: string[] = []
@@ -443,20 +529,17 @@ export async function uploadMidiaAsset(
 ): Promise<MediaItem> {
   const normalizedFolder = normalizeFolder(folder)
   const mime = await resolveMime(file)
-  const path = buildStoragePath(normalizedFolder, file.name, mime)
-  const bucket = DEFAULT_BUCKET
+  const bucket = bucketForMime(mime)
+  const path = await buildStoragePath(bucket, normalizedFolder, file.name, mime)
 
   if (normalizedFolder) {
-    await createMidiaFolder(normalizedFolder)
+    await ensureFolderInBucket(bucket, normalizedFolder)
   }
 
   let publicUrl: string
   try {
-    const displayName =
-      extensionFromName(file.name) || !MIME_EXT[mime]
-        ? file.name
-        : `${file.name}.${MIME_EXT[mime]}`
-    const typedFile = new File([file], displayName, {
+    const storageName = path.includes('/') ? path.slice(path.lastIndexOf('/') + 1) : path
+    const typedFile = new File([file], storageName, {
       type: mime,
       lastModified: file.lastModified,
     })
@@ -473,7 +556,7 @@ export async function uploadMidiaAsset(
   const { data, error } = await supabase
     .from('midia')
     .insert({
-      name: file.name,
+      name: buildPreferredFileName(file.name, mime),
       bucket,
       path,
       public_url: publicUrl,
@@ -551,7 +634,10 @@ export async function moveMidiaAsset(id: string, targetFolderInput = '') {
   if (updateError) throw updateError
 
   if (targetFolder) {
-    await createMidiaFolder(targetFolder).catch(() => undefined)
+    const bucket = LIBRARY_BUCKETS.includes(row.bucket as LibraryBucket)
+      ? (row.bucket as LibraryBucket)
+      : 'fotos'
+    await ensureFolderInBucket(bucket, targetFolder).catch(() => undefined)
   }
 
   return mapMidia(data)

@@ -327,7 +327,7 @@ export function MediaLibraryPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Biblioteca de mídia"
-        description="Organize arquivos em pastas, envie vários de uma vez e mova entre pastas."
+        description="Organize arquivos em pastas. Imagens/vídeos → fotos · áudio → podcast · PDF → livros."
         actions={
           <>
             <input
