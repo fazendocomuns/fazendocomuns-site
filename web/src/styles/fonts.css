@@ -1,0 +1,47 @@
+/*
+ * Brand font aliases. As famílias reais (Fredoka, DM Sans, etc.)
+ * vêm de next/font via --font-* no <html> (layout.tsx).
+ */
+
+@font-face {
+  font-family: 'A Little Sunshine';
+  src: local('Fredoka');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sunday Donuts';
+  src: local('Fredoka');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geosans Light';
+  src: local('DM Sans');
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Magic Bright Serif';
+  src: local('Source Serif 4');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Asenine';
+  src: local('DM Sans');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Starrrk Delivery';
+  src: local('Fredoka');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Futura';
+  src: local('Futura'), local('Century Gothic'), local('DM Sans');
+  font-display: swap;
+}
