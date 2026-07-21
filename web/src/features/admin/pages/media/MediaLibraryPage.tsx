@@ -8,7 +8,10 @@ import {
   Home,
   ImageIcon,
   Loader2,
+  MoreVertical,
+  Pencil,
   Search,
+  Trash2,
   Upload,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -28,6 +31,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { AdminPageHeader } from '@/features/admin/components/AdminPageHeader'
 import { EmptyState } from '@/features/admin/components/EmptyState'
 import {
@@ -75,7 +84,7 @@ function childFolders(allFolders: string[], current: string): string[] {
 export function MediaLibraryPage() {
   const { data: mediaLibrary = [], isLoading } = useMidiaLibrary()
   const { data: folders = [] } = useMidiaFolders()
-  const { uploadMany, createFolder } = useMidiaMutations()
+  const { uploadMany, createFolder, renameFolder, deleteFolder, remove } = useMidiaMutations()
   const showToast = useAdminUiStore((s) => s.showToast)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -85,6 +94,9 @@ export function MediaLibraryPage() {
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null)
   const [folderDialogOpen, setFolderDialogOpen] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
+  const [renameTarget, setRenameTarget] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   const breadcrumb = useMemo(
     () => (currentFolder ? currentFolder.split('/') : []),
@@ -117,7 +129,12 @@ export function MediaLibraryPage() {
     )
   }, [mediaLibrary, currentFolder, search, typeFilter])
 
-  const busy = uploadMany.isPending || createFolder.isPending
+  const busy =
+    uploadMany.isPending ||
+    createFolder.isPending ||
+    renameFolder.isPending ||
+    deleteFolder.isPending ||
+    remove.isPending
 
   async function handleUploadFiles(fileList: FileList | File[]) {
     const files = Array.from(fileList)
@@ -158,6 +175,62 @@ export function MediaLibraryPage() {
       showToast('Pasta criada!')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Não foi possível criar a pasta.'
+      showToast(message, 'error')
+    }
+  }
+
+  async function handleRenameFolder() {
+    if (!renameTarget) return
+    const nextName = renameValue.trim()
+    if (!nextName) {
+      showToast('Informe o novo nome da pasta.', 'error')
+      return
+    }
+
+    try {
+      const renamed = await renameFolder.mutateAsync({ from: renameTarget, to: nextName })
+      if (currentFolder === renameTarget || currentFolder.startsWith(`${renameTarget}/`)) {
+        setCurrentFolder(
+          currentFolder === renameTarget
+            ? renamed
+            : `${renamed}${currentFolder.slice(renameTarget.length)}`,
+        )
+      }
+      setRenameTarget(null)
+      setRenameValue('')
+      showToast('Pasta renomeada!')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Não foi possível renomear a pasta.'
+      showToast(message, 'error')
+    }
+  }
+
+  async function handleDeleteFolder() {
+    if (!deleteTarget) return
+
+    try {
+      await deleteFolder.mutateAsync(deleteTarget)
+      if (currentFolder === deleteTarget || currentFolder.startsWith(`${deleteTarget}/`)) {
+        const parent = deleteTarget.includes('/')
+          ? deleteTarget.split('/').slice(0, -1).join('/')
+          : ''
+        setCurrentFolder(parent)
+      }
+      setDeleteTarget(null)
+      showToast('Pasta excluída!')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Não foi possível excluir a pasta.'
+      showToast(message, 'error')
+    }
+  }
+
+  async function handleDeleteFile(item: MediaItem) {
+    try {
+      await remove.mutateAsync(item.id)
+      setPreviewItem(null)
+      showToast('Arquivo excluído!')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Não foi possível excluir o arquivo.'
       showToast(message, 'error')
     }
   }
@@ -290,20 +363,60 @@ export function MediaLibraryPage() {
           {subfolders.map((name) => {
             const next = joinFolder(currentFolder, name)
             return (
-              <button
+              <div
                 key={next}
-                type="button"
-                onClick={() => setCurrentFolder(next)}
-                className="group overflow-hidden rounded-2xl border border-border/60 bg-card text-left transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card text-left transition-shadow hover:shadow-md"
               >
-                <div className="flex aspect-square items-center justify-center bg-amber-50">
-                  <Folder className="size-14 text-amber-700/80 transition-transform group-hover:scale-105" />
+                <button
+                  type="button"
+                  onClick={() => setCurrentFolder(next)}
+                  className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <div className="flex aspect-square items-center justify-center bg-amber-50">
+                    <Folder className="size-14 text-amber-700/80 transition-transform group-hover:scale-105" />
+                  </div>
+                  <div className="space-y-1 p-3 pr-10">
+                    <p className="truncate font-ui text-sm font-medium">{name}</p>
+                    <p className="font-ui text-xs text-muted-foreground">Pasta</p>
+                  </div>
+                </button>
+
+                <div className="absolute right-2 top-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="secondary"
+                        className="size-8 bg-white/90 shadow-sm"
+                        disabled={!isSupabaseReady() || busy}
+                        aria-label={`Opções da pasta ${name}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuItem
+                        onSelect={() => {
+                          setRenameTarget(next)
+                          setRenameValue(name)
+                        }}
+                      >
+                        <Pencil className="size-4" />
+                        Renomear
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onSelect={() => setDeleteTarget(next)}
+                      >
+                        <Trash2 className="size-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <div className="space-y-1 p-3">
-                  <p className="truncate font-ui text-sm font-medium">{name}</p>
-                  <p className="font-ui text-xs text-muted-foreground">Pasta</p>
-                </div>
-              </button>
+              </div>
             )
           })}
 
@@ -380,6 +493,92 @@ export function MediaLibraryPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={Boolean(renameTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRenameTarget(null)
+            setRenameValue('')
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Renomear pasta</DialogTitle>
+            <DialogDescription>
+              Arquivos e subpastas serão movidos junto com o novo nome.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            placeholder="Novo nome"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                void handleRenameFolder()
+              }
+            }}
+          />
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setRenameTarget(null)
+                setRenameValue('')
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={!renameValue.trim() || renameFolder.isPending}
+              onClick={() => void handleRenameFolder()}
+            >
+              {renameFolder.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : null}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Excluir pasta</DialogTitle>
+            <DialogDescription>
+              Isso remove a pasta “{deleteTarget}”, todas as subpastas e os arquivos dentro dela.
+              Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-destructive/40 text-destructive hover:bg-destructive/10"
+              disabled={deleteFolder.isPending}
+              onClick={() => void handleDeleteFolder()}
+            >
+              {deleteFolder.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : null}
+              Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={Boolean(previewItem)} onOpenChange={(open) => !open && setPreviewItem(null)}>
         <DialogContent className="max-w-2xl">
           {previewItem && (
@@ -409,6 +608,25 @@ export function MediaLibraryPage() {
                 </div>
               )}
               <p className="break-all font-ui text-xs text-muted-foreground">{previewItem.url}</p>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setPreviewItem(null)}>
+                  Fechar
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-destructive/40 text-destructive hover:bg-destructive/10"
+                  disabled={!isSupabaseReady() || remove.isPending}
+                  onClick={() => void handleDeleteFile(previewItem)}
+                >
+                  {remove.isPending ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Trash2 className="size-4" />
+                  )}
+                  Excluir arquivo
+                </Button>
+              </DialogFooter>
             </>
           )}
         </DialogContent>

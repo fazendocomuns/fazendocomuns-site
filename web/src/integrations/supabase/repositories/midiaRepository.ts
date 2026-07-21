@@ -167,6 +167,127 @@ export async function createMidiaFolder(folderInput: string) {
   return folder
 }
 
+const MEDIA_BUCKETS = ['fotos', 'podcast', 'documentos', 'avatars', 'editoriais', 'noticias', 'livros'] as const
+
+async function listStoragePathsUnder(bucket: string, folder: string): Promise<string[]> {
+  const paths: string[] = []
+
+  async function walk(prefix: string) {
+    const { data, error } = await supabase.storage.from(bucket).list(prefix || undefined, {
+      limit: 1000,
+      sortBy: { column: 'name', order: 'asc' },
+    })
+    if (error || !data) return
+
+    for (const entry of data) {
+      const fullPath = prefix ? `${prefix}/${entry.name}` : entry.name
+      if (entry.id === null) {
+        await walk(fullPath)
+        continue
+      }
+      paths.push(fullPath)
+    }
+  }
+
+  await walk(folder)
+  return paths
+}
+
+function rewritePathPrefix(path: string, fromFolder: string, toFolder: string): string {
+  if (path === fromFolder || path.startsWith(`${fromFolder}/`)) {
+    return `${toFolder}${path.slice(fromFolder.length)}`
+  }
+  return path
+}
+
+/** Renomeia pasta (e subpastas/arquivos) no Storage + tabela midia. */
+export async function renameMidiaFolder(fromFolderInput: string, toNameOrPath: string) {
+  const fromFolder = normalizeFolder(fromFolderInput)
+  if (!fromFolder) throw new Error('Pasta de origem inválida.')
+
+  const parent = fromFolder.includes('/') ? fromFolder.split('/').slice(0, -1).join('/') : ''
+  const toFolder = toNameOrPath.includes('/')
+    ? normalizeFolder(toNameOrPath)
+    : normalizeFolder(parent ? `${parent}/${toNameOrPath}` : toNameOrPath)
+
+  if (!toFolder) throw new Error('Informe um nome de pasta válido.')
+  if (toFolder === fromFolder) return toFolder
+  if (toFolder.startsWith(`${fromFolder}/`)) {
+    throw new Error('A pasta de destino não pode ficar dentro dela mesma.')
+  }
+
+  const existing = await listMidiaFolders()
+  if (existing.includes(toFolder)) {
+    throw new Error('Já existe uma pasta com esse nome.')
+  }
+
+  const { data: rows, error } = await supabase
+    .from('midia')
+    .select('id, bucket, path')
+    .like('path', `${fromFolder}/%`)
+
+  if (error) throw error
+
+  for (const row of rows ?? []) {
+    const nextPath = rewritePathPrefix(row.path, fromFolder, toFolder)
+    if (nextPath === row.path) continue
+
+    const { error: moveError } = await supabase.storage.from(row.bucket).move(row.path, nextPath)
+    if (moveError) throw moveError
+
+    const { data: urlData } = supabase.storage.from(row.bucket).getPublicUrl(nextPath)
+    const { error: updateError } = await supabase
+      .from('midia')
+      .update({ path: nextPath, public_url: urlData.publicUrl })
+      .eq('id', row.id)
+    if (updateError) throw updateError
+  }
+
+  for (const bucket of MEDIA_BUCKETS) {
+    const storagePaths = await listStoragePathsUnder(bucket, fromFolder)
+    for (const path of storagePaths) {
+      const nextPath = rewritePathPrefix(path, fromFolder, toFolder)
+      if (nextPath === path) continue
+      // Já movido via midia acima
+      if ((rows ?? []).some((r) => r.bucket === bucket && r.path === path)) continue
+      const { error: moveError } = await supabase.storage.from(bucket).move(path, nextPath)
+      if (moveError && !/not found|not_found/i.test(moveError.message)) {
+        throw moveError
+      }
+    }
+  }
+
+  return toFolder
+}
+
+/** Exclui pasta, arquivos internos (Storage + midia) e marcador .keep. */
+export async function deleteMidiaFolder(folderInput: string) {
+  const folder = normalizeFolder(folderInput)
+  if (!folder) throw new Error('Pasta inválida.')
+
+  const { data: rows, error } = await supabase
+    .from('midia')
+    .select('id, bucket, path')
+    .like('path', `${folder}/%`)
+
+  if (error) throw error
+
+  for (const row of rows ?? []) {
+    await supabase.storage.from(row.bucket).remove([row.path])
+    const { error: deleteError } = await supabase.from('midia').delete().eq('id', row.id)
+    if (deleteError) throw deleteError
+  }
+
+  for (const bucket of MEDIA_BUCKETS) {
+    const storagePaths = await listStoragePathsUnder(bucket, folder)
+    if (storagePaths.length) {
+      await supabase.storage.from(bucket).remove(storagePaths)
+    }
+  }
+
+  return folder
+}
+
 export async function uploadMidiaAsset(
   file: File,
   uploadedBy?: string,

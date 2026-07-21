@@ -3,8 +3,10 @@ import { isSupabaseConfigured } from '@/lib/supabase/env'
 import {
   createMidiaFolder,
   deleteMidia,
+  deleteMidiaFolder,
   fetchMidia,
   listMidiaFolders,
+  renameMidiaFolder,
   uploadMidiaAsset,
   uploadMidiaAssets,
 } from '@/integrations/supabase/repositories/midiaRepository'
@@ -77,6 +79,14 @@ export function useMidiaMutations() {
     }),
     createFolder: useMutation({
       mutationFn: (folderPath: string) => createMidiaFolder(folderPath),
+      onSuccess: invalidate,
+    }),
+    renameFolder: useMutation({
+      mutationFn: (input: { from: string; to: string }) => renameMidiaFolder(input.from, input.to),
+      onSuccess: invalidate,
+    }),
+    deleteFolder: useMutation({
+      mutationFn: (folderPath: string) => deleteMidiaFolder(folderPath),
       onSuccess: invalidate,
     }),
     remove: useMutation({
