@@ -654,30 +654,52 @@ export function MediaLibraryPage() {
               <div
                 style={{
                   width: '100%',
-                  height: 160,
-                  minHeight: 160,
-                  backgroundColor: '#f0ebe3',
                   display: 'flex',
-                  alignItems: 'center',
                   justifyContent: 'center',
+                  backgroundColor: '#efe8de',
+                  padding: 8,
                 }}
               >
                 {item.type === 'image' ? (
                   <div
-                    role="img"
-                    aria-label={item.alt}
-                    draggable={false}
                     style={{
-                      width: '100%',
+                      width: 160,
                       height: 160,
-                      backgroundImage: `url("${item.url.replace(/"/g, '\\"')}")`,
-                      backgroundSize: 'contain',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat',
+                      borderRadius: 8,
+                      overflow: 'hidden',
+                      background: '#efe8de',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
-                  />
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.url}
+                      alt={item.alt}
+                      draggable={false}
+                      style={{
+                        display: 'block',
+                        width: 'auto',
+                        height: 'auto',
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: 'contain',
+                      }}
+                    />
+                  </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center gap-2">
+                  <div
+                    style={{
+                      width: 160,
+                      height: 160,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                    }}
+                  >
                     <ImageIcon className="size-10 text-muted-foreground" />
                     <span className="font-ui text-xs uppercase tracking-wide text-muted-foreground">
                       {item.type}

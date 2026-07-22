@@ -17,6 +17,7 @@ import { isSupabaseReady } from '@/lib/supabase/client'
 import { useMidiaLibrary, useMidiaMutations } from '@/features/admin/api/midia'
 import { useAdminStore } from '@/features/admin/store/adminStore'
 import { useAdminUiStore } from '@/features/admin/store/adminUiStore'
+import { MediaThumbnail } from '@/features/admin/components/MediaThumbnail'
 import { cn } from '@/lib/utils'
 
 interface ImagePickerProps {
@@ -25,34 +26,6 @@ interface ImagePickerProps {
   label?: string
   error?: string
   className?: string
-}
-
-/** Miniatura com altura garantida — não depende de aspect-ratio/flex do Tailwind. */
-function MediaThumb({
-  url,
-  alt,
-  height,
-}: {
-  url: string
-  alt: string
-  height: number
-}) {
-  return (
-    <div
-      role="img"
-      aria-label={alt}
-      style={{
-        width: '100%',
-        height,
-        minHeight: height,
-        backgroundColor: '#f0ebe3',
-        backgroundImage: `url("${url.replace(/"/g, '\\"')}")`,
-        backgroundSize: 'contain',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-    />
-  )
 }
 
 export function ImagePicker({
@@ -107,54 +80,55 @@ export function ImagePicker({
         <div
           style={{
             position: 'relative',
-            width: 144,
-            height: 144,
-            flexShrink: 0,
+            width: 160,
+            height: 160,
             borderRadius: 12,
             border: '1px solid #e8e0d4',
             overflow: 'hidden',
-            backgroundColor: '#f0ebe3',
+            flexShrink: 0,
           }}
         >
           {value ? (
             <>
-              <MediaThumb url={value} alt="" height={144} />
+              <MediaThumbnail url={value} alt="" size={160} />
               <button
                 type="button"
                 onClick={() => onChange('')}
                 aria-label="Remover imagem"
                 style={{
                   position: 'absolute',
-                  top: 6,
-                  right: 6,
-                  width: 24,
-                  height: 24,
-                  borderRadius: 999,
+                  top: 8,
+                  right: 8,
+                  zIndex: 2,
+                  width: 28,
+                  height: 28,
                   border: 'none',
-                  background: 'rgba(26,22,18,0.75)',
+                  borderRadius: 999,
+                  background: 'rgba(26,22,18,0.8)',
                   color: '#fff',
                   display: 'grid',
                   placeItems: 'center',
                   cursor: 'pointer',
                 }}
               >
-                <X style={{ width: 14, height: 14 }} />
+                <X width={14} height={14} />
               </button>
             </>
           ) : (
             <div
               style={{
-                width: '100%',
-                height: '100%',
+                width: 160,
+                height: 160,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 4,
+                gap: 6,
+                background: '#efe8de',
                 color: '#7a6b58',
               }}
             >
-              <ImageIcon style={{ width: 32, height: 32, opacity: 0.5 }} />
+              <ImageIcon width={28} height={28} opacity={0.5} />
               <span className="font-ui text-xs">Sem imagem</span>
             </div>
           )}
@@ -174,10 +148,7 @@ export function ImagePicker({
               </Button>
             </DialogTrigger>
 
-            <DialogContent
-              className="gap-4 overflow-hidden p-5 sm:max-w-4xl"
-              style={{ maxWidth: '56rem' }}
-            >
+            <DialogContent className="max-h-[90vh] overflow-hidden sm:max-w-3xl">
               <DialogHeader>
                 <DialogTitle>Selecionar imagem</DialogTitle>
               </DialogHeader>
@@ -204,13 +175,7 @@ export function ImagePicker({
               </div>
 
               {isLoading ? (
-                <div
-                  style={{
-                    minHeight: 280,
-                    display: 'grid',
-                    placeItems: 'center',
-                  }}
-                >
+                <div style={{ minHeight: 320, display: 'grid', placeItems: 'center' }}>
                   <Loader2
                     className="animate-spin text-primary"
                     style={{ width: 32, height: 32 }}
@@ -218,61 +183,61 @@ export function ImagePicker({
                   />
                 </div>
               ) : images.length === 0 ? (
-                <p className="py-10 text-center font-ui text-sm text-muted-foreground">
+                <p className="py-12 text-center font-ui text-sm text-muted-foreground">
                   Nenhuma imagem encontrada na biblioteca.
                 </p>
               ) : (
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-                    gap: 12,
-                    maxHeight: 'min(65vh, 520px)',
+                    gridTemplateColumns: 'repeat(auto-fill, 168px)',
+                    justifyContent: 'center',
+                    gap: 16,
+                    maxHeight: 'min(60vh, 480px)',
                     overflowY: 'auto',
-                    paddingRight: 4,
+                    padding: '4px 2px 12px',
                   }}
                 >
                   {images.map((item) => {
                     const selected = value === item.url
                     return (
-                      <div
+                      <button
                         key={item.id}
-                        role="button"
-                        tabIndex={0}
+                        type="button"
                         onClick={() => {
                           onChange(item.url)
                           setOpen(false)
                         }}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault()
-                            onChange(item.url)
-                            setOpen(false)
-                          }
-                        }}
                         style={{
+                          width: 168,
+                          padding: 0,
+                          margin: 0,
+                          border: selected ? '2px solid #ef3220' : '2px solid #e8e0d4',
+                          borderRadius: 12,
+                          background: '#fff',
+                          cursor: 'pointer',
+                          overflow: 'hidden',
+                          textAlign: 'left',
+                          boxShadow: selected ? '0 0 0 3px rgba(239,50,32,0.18)' : 'none',
                           display: 'flex',
                           flexDirection: 'column',
-                          borderRadius: 12,
-                          border: selected ? '2px solid #ef3220' : '2px solid #e8e0d4',
-                          background: '#fff',
-                          overflow: 'hidden',
-                          cursor: 'pointer',
-                          boxShadow: selected ? '0 0 0 3px rgba(239,50,32,0.15)' : 'none',
                         }}
                       >
-                        <MediaThumb url={item.url} alt={item.alt || item.name} height={168} />
+                        <MediaThumbnail
+                          url={item.url}
+                          alt={item.alt || item.name}
+                          size={164}
+                        />
                         <div
                           style={{
                             borderTop: '1px solid #e8e0d4',
                             padding: '8px 10px',
-                            minHeight: 44,
+                            background: '#fff',
                           }}
                         >
-                          <p
+                          <div
                             className="font-ui"
                             style={{
-                              margin: 0,
                               fontSize: 12,
                               fontWeight: 600,
                               color: '#1a1612',
@@ -283,12 +248,12 @@ export function ImagePicker({
                             title={item.name}
                           >
                             {item.name}
-                          </p>
+                          </div>
                           {item.folder ? (
-                            <p
+                            <div
                               className="font-ui"
                               style={{
-                                margin: '2px 0 0',
+                                marginTop: 2,
                                 fontSize: 11,
                                 color: '#7a6b58',
                                 overflow: 'hidden',
@@ -298,10 +263,10 @@ export function ImagePicker({
                               title={item.folder}
                             >
                               {item.folder}
-                            </p>
+                            </div>
                           ) : null}
                         </div>
-                      </div>
+                      </button>
                     )
                   })}
                 </div>
