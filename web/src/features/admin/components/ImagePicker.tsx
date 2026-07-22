@@ -75,14 +75,18 @@ export function ImagePicker({
     <div className={cn('space-y-2', className)}>
       <Label>{label}</Label>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        <div className="relative flex size-36 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/60 p-1.5">
+        <div className="relative size-36 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-neutral-100">
           {value ? (
             <>
-              <img src={value} alt="" className="max-h-full max-w-full object-contain" />
+              <img
+                src={value}
+                alt=""
+                className="absolute inset-0 h-full w-full object-contain p-1.5"
+              />
               <button
                 type="button"
                 onClick={() => onChange('')}
-                className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-neutral-900/70 text-white transition-colors hover:bg-neutral-900"
+                className="absolute right-1 top-1 z-10 flex size-6 items-center justify-center rounded-full bg-neutral-900/70 text-white transition-colors hover:bg-neutral-900"
                 aria-label="Remover imagem"
               >
                 <X className="size-3.5" />
@@ -131,7 +135,7 @@ export function ImagePicker({
                   Nenhuma imagem encontrada na biblioteca.
                 </p>
               ) : (
-                <div className="grid max-h-[min(70vh,520px)] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3">
+                <div className="grid max-h-[min(70vh,560px)] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3">
                   {images.map((item) => (
                     <button
                       key={item.id}
@@ -141,17 +145,17 @@ export function ImagePicker({
                         setOpen(false)
                       }}
                       className={cn(
-                        'group overflow-hidden rounded-xl border-2 bg-card text-left transition-all hover:border-primary',
+                        'group flex flex-col overflow-hidden rounded-xl border-2 bg-card text-left transition-all hover:border-primary',
                         value === item.url
                           ? 'border-primary ring-2 ring-primary/20'
                           : 'border-border/50',
                       )}
                     >
-                      <div className="flex aspect-[4/3] items-center justify-center bg-muted/50 p-2">
+                      <div className="relative h-40 w-full shrink-0 bg-neutral-100 sm:h-44">
                         <img
                           src={item.url}
                           alt={item.alt}
-                          className="max-h-full max-w-full object-contain"
+                          className="absolute inset-0 h-full w-full object-contain p-2"
                         />
                       </div>
                       <div className="space-y-0.5 border-t border-border/40 px-2.5 py-2">
