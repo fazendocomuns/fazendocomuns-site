@@ -27,6 +27,34 @@ interface ImagePickerProps {
   className?: string
 }
 
+/** Miniatura com altura garantida — não depende de aspect-ratio/flex do Tailwind. */
+function MediaThumb({
+  url,
+  alt,
+  height,
+}: {
+  url: string
+  alt: string
+  height: number
+}) {
+  return (
+    <div
+      role="img"
+      aria-label={alt}
+      style={{
+        width: '100%',
+        height,
+        minHeight: height,
+        backgroundColor: '#f0ebe3',
+        backgroundImage: `url("${url.replace(/"/g, '\\"')}")`,
+        backgroundSize: 'contain',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    />
+  )
+}
+
 export function ImagePicker({
   value,
   onChange,
@@ -74,27 +102,59 @@ export function ImagePicker({
   return (
     <div className={cn('space-y-2', className)}>
       <Label>{label}</Label>
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        <div className="relative size-36 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-neutral-100">
+        <div
+          style={{
+            position: 'relative',
+            width: 144,
+            height: 144,
+            flexShrink: 0,
+            borderRadius: 12,
+            border: '1px solid #e8e0d4',
+            overflow: 'hidden',
+            backgroundColor: '#f0ebe3',
+          }}
+        >
           {value ? (
             <>
-              <img
-                src={value}
-                alt=""
-                className="absolute inset-0 h-full w-full object-contain p-1.5"
-              />
+              <MediaThumb url={value} alt="" height={144} />
               <button
                 type="button"
                 onClick={() => onChange('')}
-                className="absolute right-1 top-1 z-10 flex size-6 items-center justify-center rounded-full bg-neutral-900/70 text-white transition-colors hover:bg-neutral-900"
                 aria-label="Remover imagem"
+                style={{
+                  position: 'absolute',
+                  top: 6,
+                  right: 6,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 999,
+                  border: 'none',
+                  background: 'rgba(26,22,18,0.75)',
+                  color: '#fff',
+                  display: 'grid',
+                  placeItems: 'center',
+                  cursor: 'pointer',
+                }}
               >
-                <X className="size-3.5" />
+                <X style={{ width: 14, height: 14 }} />
               </button>
             </>
           ) : (
-            <div className="flex size-full flex-col items-center justify-center gap-1 text-muted-foreground">
-              <ImageIcon className="size-8 opacity-50" />
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 4,
+                color: '#7a6b58',
+              }}
+            >
+              <ImageIcon style={{ width: 32, height: 32, opacity: 0.5 }} />
               <span className="font-ui text-xs">Sem imagem</span>
             </div>
           )}
@@ -113,12 +173,28 @@ export function ImagePicker({
                 Selecionar da biblioteca
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl">
+
+            <DialogContent
+              className="gap-4 overflow-hidden p-5 sm:max-w-4xl"
+              style={{ maxWidth: '56rem' }}
+            >
               <DialogHeader>
                 <DialogTitle>Selecionar imagem</DialogTitle>
               </DialogHeader>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+
+              <div style={{ position: 'relative' }}>
+                <Search
+                  style={{
+                    position: 'absolute',
+                    left: 12,
+                    top: '50%',
+                    width: 16,
+                    height: 16,
+                    transform: 'translateY(-50%)',
+                    color: '#7a6b58',
+                    pointerEvents: 'none',
+                  }}
+                />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -126,50 +202,108 @@ export function ImagePicker({
                   className="pl-9"
                 />
               </div>
+
               {isLoading ? (
-                <div className="flex min-h-[240px] items-center justify-center">
-                  <Loader2 className="size-8 animate-spin text-primary" aria-label="Carregando" />
+                <div
+                  style={{
+                    minHeight: 280,
+                    display: 'grid',
+                    placeItems: 'center',
+                  }}
+                >
+                  <Loader2
+                    className="animate-spin text-primary"
+                    style={{ width: 32, height: 32 }}
+                    aria-label="Carregando"
+                  />
                 </div>
               ) : images.length === 0 ? (
                 <p className="py-10 text-center font-ui text-sm text-muted-foreground">
                   Nenhuma imagem encontrada na biblioteca.
                 </p>
               ) : (
-                <div className="grid max-h-[min(70vh,560px)] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3">
-                  {images.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        onChange(item.url)
-                        setOpen(false)
-                      }}
-                      className={cn(
-                        'group flex flex-col overflow-hidden rounded-xl border-2 bg-card text-left transition-all hover:border-primary',
-                        value === item.url
-                          ? 'border-primary ring-2 ring-primary/20'
-                          : 'border-border/50',
-                      )}
-                    >
-                      <div className="relative h-40 w-full shrink-0 bg-neutral-100 sm:h-44">
-                        <img
-                          src={item.url}
-                          alt={item.alt}
-                          className="absolute inset-0 h-full w-full object-contain p-2"
-                        />
-                      </div>
-                      <div className="space-y-0.5 border-t border-border/40 px-2.5 py-2">
-                        <p className="truncate font-ui text-xs font-medium text-foreground">
-                          {item.name}
-                        </p>
-                        {item.folder ? (
-                          <p className="truncate font-ui text-[11px] text-muted-foreground">
-                            {item.folder}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                    gap: 12,
+                    maxHeight: 'min(65vh, 520px)',
+                    overflowY: 'auto',
+                    paddingRight: 4,
+                  }}
+                >
+                  {images.map((item) => {
+                    const selected = value === item.url
+                    return (
+                      <div
+                        key={item.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          onChange(item.url)
+                          setOpen(false)
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            onChange(item.url)
+                            setOpen(false)
+                          }
+                        }}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          borderRadius: 12,
+                          border: selected ? '2px solid #ef3220' : '2px solid #e8e0d4',
+                          background: '#fff',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          boxShadow: selected ? '0 0 0 3px rgba(239,50,32,0.15)' : 'none',
+                        }}
+                      >
+                        <MediaThumb url={item.url} alt={item.alt || item.name} height={168} />
+                        <div
+                          style={{
+                            borderTop: '1px solid #e8e0d4',
+                            padding: '8px 10px',
+                            minHeight: 44,
+                          }}
+                        >
+                          <p
+                            className="font-ui"
+                            style={{
+                              margin: 0,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: '#1a1612',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                            title={item.name}
+                          >
+                            {item.name}
                           </p>
-                        ) : null}
+                          {item.folder ? (
+                            <p
+                              className="font-ui"
+                              style={{
+                                margin: '2px 0 0',
+                                fontSize: 11,
+                                color: '#7a6b58',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                              title={item.folder}
+                            >
+                              {item.folder}
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
-                    </button>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </DialogContent>
@@ -210,11 +344,12 @@ export function ImagePicker({
           )}
         </div>
       </div>
-      {error && (
+
+      {error ? (
         <p className="text-sm text-brand-red" role="alert">
           {error}
         </p>
-      )}
+      ) : null}
     </div>
   )
 }
