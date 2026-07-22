@@ -1,45 +1,48 @@
 'use client'
 
-import styles from './MediaThumbnail.module.css'
-
 type MediaThumbnailProps = {
   url: string
   alt?: string
   /** Lado do quadrado em px (padrão 160). */
   size?: number
-  /** Se false, usa retângulo 4:3 com a mesma largura. */
-  square?: boolean
   className?: string
 }
 
 /**
- * Mostra a imagem INTEIRA dentro de uma caixa de tamanho fixo
- * (nem cortada, nem esticada). Isolado via CSS module.
+ * Foto completa dentro de um quadrado fixo.
+ * width+height explícitos no <img> — object-fit:contain funciona de verdade.
  */
 export function MediaThumbnail({
   url,
   alt = '',
   size = 160,
-  square = true,
   className,
 }: MediaThumbnailProps) {
-  const height = square ? size : Math.round((size * 3) / 4)
-
   return (
-    <div
-      className={[styles.frame, className].filter(Boolean).join(' ')}
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt={alt}
+      width={size}
+      height={size}
+      loading="lazy"
+      decoding="async"
+      className={className}
       style={{
+        display: 'block',
+        boxSizing: 'border-box',
         width: size,
-        height,
-        minWidth: size,
-        minHeight: height,
+        height: size,
         maxWidth: size,
-        maxHeight: height,
+        maxHeight: size,
+        minWidth: size,
+        minHeight: size,
+        objectFit: 'contain',
+        objectPosition: 'center center',
+        backgroundColor: '#efe8de',
+        borderRadius: 8,
         flexShrink: 0,
       }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={url} alt={alt} className={styles.image} loading="lazy" decoding="async" />
-    </div>
+    />
   )
 }

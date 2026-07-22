@@ -20,7 +20,6 @@ import { useAdminUiStore } from '@/features/admin/store/adminUiStore'
 import { MediaThumbnail } from '@/features/admin/components/MediaThumbnail'
 import { cn } from '@/lib/utils'
 import type { MediaItem } from '@/features/admin/types'
-import pickerStyles from './ImagePicker.module.css'
 
 interface ImagePickerProps {
   value: string
@@ -30,11 +29,10 @@ interface ImagePickerProps {
   className?: string
 }
 
-function selectItem(item: MediaItem, onChange: (url: string) => void, close: () => void) {
-  onChange(item.url)
-  close()
-}
-
+/**
+ * Seletor de foto usado em:
+ * /admin/pesquisadores, /admin/assistentes, /admin/consultores, /admin/colaboradores
+ */
 export function ImagePicker({
   value,
   onChange,
@@ -63,12 +61,16 @@ export function ImagePicker({
     )
   }, [mediaLibrary, search])
 
+  function choose(item: MediaItem) {
+    onChange(item.url)
+    setOpen(false)
+  }
+
   async function handleUpload(file: File) {
     if (!isSupabaseReady()) {
       showToast('Upload disponível apenas com Supabase ativo.', 'error')
       return
     }
-
     try {
       const item = await upload.mutateAsync(file)
       onChange(item.url)
@@ -83,29 +85,64 @@ export function ImagePicker({
     <div className={cn('space-y-2', className)}>
       <Label>{label}</Label>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        <div className={pickerStyles.preview}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-start' }}>
+        <div
+          style={{
+            position: 'relative',
+            width: 160,
+            height: 160,
+            borderRadius: 12,
+            border: '1px solid #e8e0d4',
+            overflow: 'hidden',
+            background: '#efe8de',
+          }}
+        >
           {value ? (
             <>
               <MediaThumbnail url={value} alt="" size={160} />
               <button
                 type="button"
-                className={pickerStyles.removeBtn}
                 onClick={() => onChange('')}
                 aria-label="Remover imagem"
+                style={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  zIndex: 2,
+                  width: 28,
+                  height: 28,
+                  border: 0,
+                  borderRadius: 999,
+                  background: 'rgba(26,22,18,0.8)',
+                  color: '#fff',
+                  display: 'grid',
+                  placeItems: 'center',
+                  cursor: 'pointer',
+                }}
               >
                 <X width={14} height={14} />
               </button>
             </>
           ) : (
-            <div className={pickerStyles.emptyPreview}>
+            <div
+              style={{
+                width: 160,
+                height: 160,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                color: '#7a6b58',
+              }}
+            >
               <ImageIcon width={28} height={28} opacity={0.5} />
               <span className="font-ui text-xs">Sem imagem</span>
             </div>
           )}
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Dialog
             open={open}
             onOpenChange={(next) => {
@@ -119,13 +156,28 @@ export function ImagePicker({
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-h-[90vh] overflow-hidden sm:max-w-3xl">
+            <DialogContent
+              className="sm:max-w-3xl"
+              style={{ display: 'flex', flexDirection: 'column', gap: 16, maxHeight: '90vh' }}
+            >
               <DialogHeader>
                 <DialogTitle>Selecionar imagem</DialogTitle>
               </DialogHeader>
 
-              <div className={pickerStyles.searchWrap}>
-                <Search className={pickerStyles.searchIcon} aria-hidden />
+              <div style={{ position: 'relative' }}>
+                <Search
+                  aria-hidden
+                  style={{
+                    position: 'absolute',
+                    left: 12,
+                    top: '50%',
+                    width: 16,
+                    height: 16,
+                    transform: 'translateY(-50%)',
+                    color: '#7a6b58',
+                    pointerEvents: 'none',
+                  }}
+                />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -135,7 +187,7 @@ export function ImagePicker({
               </div>
 
               {isLoading ? (
-                <div className={pickerStyles.loading}>
+                <div style={{ minHeight: 280, display: 'grid', placeItems: 'center' }}>
                   <Loader2
                     className="animate-spin text-primary"
                     style={{ width: 32, height: 32 }}
@@ -143,11 +195,20 @@ export function ImagePicker({
                   />
                 </div>
               ) : images.length === 0 ? (
-                <p className="py-12 text-center font-ui text-sm text-muted-foreground">
+                <p className="py-10 text-center font-ui text-sm text-muted-foreground">
                   Nenhuma imagem encontrada na biblioteca.
                 </p>
               ) : (
-                <div className={pickerStyles.grid}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))',
+                    gap: 12,
+                    overflowY: 'auto',
+                    maxHeight: 'min(58vh, 460px)',
+                    paddingBottom: 8,
+                  }}
+                >
                   {images.map((item) => {
                     const selected = value === item.url
                     return (
@@ -155,33 +216,64 @@ export function ImagePicker({
                         key={item.id}
                         role="button"
                         tabIndex={0}
-                        className={cn(pickerStyles.card, selected && pickerStyles.cardSelected)}
-                        onClick={() => selectItem(item, onChange, () => setOpen(false))}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault()
-                            selectItem(item, onChange, () => setOpen(false))
+                        onClick={() => choose(item)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            choose(item)
                           }
                         }}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'stretch',
+                          gap: 0,
+                          margin: 0,
+                          padding: 8,
+                          cursor: 'pointer',
+                          background: '#fff',
+                          border: selected ? '2px solid #ef3220' : '2px solid #e8e0d4',
+                          borderRadius: 12,
+                          boxShadow: selected ? '0 0 0 3px rgba(239,50,32,0.18)' : 'none',
+                          outline: 'none',
+                        }}
                       >
-                        {/* Imagem FORA de <button> — evita estilos de button cortarem a foto */}
-                        <div className={pickerStyles.cardMedia}>
-                          <MediaThumbnail
-                            url={item.url}
-                            alt={item.alt || item.name}
-                            size={160}
-                          />
+                        <MediaThumbnail
+                          url={item.url}
+                          alt={item.alt || item.name}
+                          size={140}
+                        />
+                        <div
+                          style={{
+                            marginTop: 8,
+                            fontFamily: 'var(--font-ui), system-ui, sans-serif',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: '#1a1612',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                          title={item.name}
+                        >
+                          {item.name}
                         </div>
-                        <div className={pickerStyles.cardMeta}>
-                          <div className={pickerStyles.cardName} title={item.name}>
-                            {item.name}
+                        {item.folder ? (
+                          <div
+                            style={{
+                              marginTop: 2,
+                              fontFamily: 'var(--font-ui), system-ui, sans-serif',
+                              fontSize: 11,
+                              color: '#7a6b58',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                            title={item.folder}
+                          >
+                            {item.folder}
                           </div>
-                          {item.folder ? (
-                            <div className={pickerStyles.cardFolder} title={item.folder}>
-                              {item.folder}
-                            </div>
-                          ) : null}
-                        </div>
+                        ) : null}
                       </div>
                     )
                   })}
