@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { ImageIcon, Loader2, Upload, X } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { ImageIcon, Loader2, Search, Upload, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Dialog,
@@ -34,6 +35,7 @@ export function ImagePicker({
   className,
 }: ImagePickerProps) {
   const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const mockLibrary = useAdminStore((s) => s.mediaLibrary)
   const { data: remoteLibrary = [], isLoading } = useMidiaLibrary()
@@ -41,7 +43,17 @@ export function ImagePicker({
   const showToast = useAdminUiStore((s) => s.showToast)
 
   const mediaLibrary = isSupabaseConfigured() ? remoteLibrary : mockLibrary
-  const images = mediaLibrary.filter((m) => m.type === 'image')
+  const images = useMemo(() => {
+    const list = mediaLibrary.filter((m) => m.type === 'image')
+    const query = search.trim().toLowerCase()
+    if (!query) return list
+    return list.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) ||
+        item.alt.toLowerCase().includes(query) ||
+        (item.folder ?? '').toLowerCase().includes(query),
+    )
+  }, [mediaLibrary, search])
 
   async function handleUpload(file: File) {
     if (!isSupabaseReady()) {
@@ -63,10 +75,10 @@ export function ImagePicker({
     <div className={cn('space-y-2', className)}>
       <Label>{label}</Label>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        <div className="relative size-32 shrink-0 overflow-hidden rounded-xl border border-border/60 bg-muted">
+        <div className="relative flex size-36 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/60 p-1.5">
           {value ? (
             <>
-              <img src={value} alt="" className="size-full object-cover" />
+              <img src={value} alt="" className="max-h-full max-w-full object-contain" />
               <button
                 type="button"
                 onClick={() => onChange('')}
@@ -85,22 +97,41 @@ export function ImagePicker({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog
+            open={open}
+            onOpenChange={(next) => {
+              setOpen(next)
+              if (!next) setSearch('')
+            }}
+          >
             <DialogTrigger asChild>
               <Button type="button" variant="outline" size="sm">
                 Selecionar da biblioteca
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl">
               <DialogHeader>
                 <DialogTitle>Selecionar imagem</DialogTitle>
               </DialogHeader>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Buscar por nome ou pasta…"
+                  className="pl-9"
+                />
+              </div>
               {isLoading ? (
-                <div className="flex min-h-[200px] items-center justify-center">
+                <div className="flex min-h-[240px] items-center justify-center">
                   <Loader2 className="size-8 animate-spin text-primary" aria-label="Carregando" />
                 </div>
+              ) : images.length === 0 ? (
+                <p className="py-10 text-center font-ui text-sm text-muted-foreground">
+                  Nenhuma imagem encontrada na biblioteca.
+                </p>
               ) : (
-                <div className="grid max-h-[400px] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3">
+                <div className="grid max-h-[min(70vh,520px)] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3">
                   {images.map((item) => (
                     <button
                       key={item.id}
@@ -110,18 +141,29 @@ export function ImagePicker({
                         setOpen(false)
                       }}
                       className={cn(
-                        'group overflow-hidden rounded-xl border-2 transition-all hover:border-primary',
-                        value === item.url ? 'border-primary ring-2 ring-primary/20' : 'border-transparent',
+                        'group overflow-hidden rounded-xl border-2 bg-card text-left transition-all hover:border-primary',
+                        value === item.url
+                          ? 'border-primary ring-2 ring-primary/20'
+                          : 'border-border/50',
                       )}
                     >
-                      <img
-                        src={item.url}
-                        alt={item.alt}
-                        className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
-                      />
-                      <p className="truncate px-2 py-1.5 text-left font-ui text-xs text-muted-foreground">
-                        {item.name}
-                      </p>
+                      <div className="flex aspect-[4/3] items-center justify-center bg-muted/50 p-2">
+                        <img
+                          src={item.url}
+                          alt={item.alt}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <div className="space-y-0.5 border-t border-border/40 px-2.5 py-2">
+                        <p className="truncate font-ui text-xs font-medium text-foreground">
+                          {item.name}
+                        </p>
+                        {item.folder ? (
+                          <p className="truncate font-ui text-[11px] text-muted-foreground">
+                            {item.folder}
+                          </p>
+                        ) : null}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -134,7 +176,7 @@ export function ImagePicker({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/heic"
                 className="hidden"
                 onChange={(event) => {
                   const file = event.target.files?.[0]

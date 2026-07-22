@@ -5,7 +5,8 @@ import {
   deleteMidia,
   deleteMidiaFolder,
   fetchMidia,
-  listMidiaFolders,
+  foldersFromMidiaItems,
+  listStorageFolderMarkers,
   moveMidiaAsset,
   renameMidiaFolder,
   uploadMidiaAsset,
@@ -13,6 +14,7 @@ import {
 } from '@/integrations/supabase/repositories/midiaRepository'
 import { useAdminStore } from '@/features/admin/store/adminStore'
 import { useAuth } from '@/features/admin/hooks/useAuth'
+import { useMemo } from 'react'
 
 export const midiaKeys = {
   all: ['admin', 'midia'] as const,
@@ -45,13 +47,32 @@ export function useMidiaLibrary() {
 
 export function useMidiaFolders() {
   const enabled = isSupabaseConfigured()
-  return useQuery({
+  const { data: mediaLibrary = [] } = useMidiaLibrary()
+
+  const foldersFromMedia = useMemo(
+    () => foldersFromMidiaItems(mediaLibrary),
+    [mediaLibrary],
+  )
+
+  const query = useQuery({
     queryKey: midiaKeys.folders,
-    queryFn: listMidiaFolders,
+    queryFn: listStorageFolderMarkers,
     enabled,
-    staleTime: 30_000,
+    staleTime: 60_000,
     initialData: enabled ? undefined : [],
   })
+
+  const data = useMemo(() => {
+    const merged = new Set([...foldersFromMedia, ...(query.data ?? [])])
+    return [...merged].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  }, [foldersFromMedia, query.data])
+
+  return {
+    ...query,
+    data,
+    // Pastas com arquivos aparecem na hora (via midia); storage só completa pastas vazias
+    isLoading: enabled && foldersFromMedia.length === 0 && query.isLoading,
+  }
 }
 
 export function useMidiaMutations() {

@@ -305,25 +305,36 @@ export async function fetchMidia() {
   return (data ?? []).map(mapMidia)
 }
 
-/** Lista pastas conhecidas (prefixos em midia + marcadores no Storage). */
-export async function listMidiaFolders(): Promise<string[]> {
+function collectFolderPrefixes(folder: string, into: Set<string>) {
+  if (!folder) return
+  const parts = folder.split('/')
+  for (let i = 1; i <= parts.length; i += 1) {
+    into.add(parts.slice(0, i).join('/'))
+  }
+}
+
+export function foldersFromMidiaItems(
+  items: Array<{ folder?: string | null }>,
+): string[] {
+  const folders = new Set<string>()
+  for (const item of items) {
+    collectFolderPrefixes(item.folder ?? '', folders)
+  }
+  return [...folders].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+}
+
+/** Lista pastas vazias no Storage (marcadores). Pastas com arquivos vêm da tabela midia. */
+export async function listStorageFolderMarkers(): Promise<string[]> {
   const folders = new Set<string>()
 
-  const items = await fetchMidia()
-  for (const item of items) {
-    if (!item.folder) continue
-    const parts = item.folder.split('/')
-    for (let i = 1; i <= parts.length; i += 1) {
-      folders.add(parts.slice(0, i).join('/'))
-    }
-  }
-
-  async function walk(bucket: string, prefix: string) {
+  async function walk(bucket: string, prefix: string): Promise<void> {
     const { data, error } = await supabase.storage.from(bucket).list(prefix || undefined, {
       limit: 1000,
       sortBy: { column: 'name', order: 'asc' },
     })
     if (error || !data) return
+
+    const nested: Promise<void>[] = []
 
     for (const entry of data) {
       const fullPath = prefix ? `${prefix}/${entry.name}` : entry.name
@@ -333,20 +344,35 @@ export async function listMidiaFolders(): Promise<string[]> {
       }
       if (entry.id === null) {
         folders.add(fullPath)
-        await walk(bucket, fullPath)
+        nested.push(walk(bucket, fullPath))
       }
     }
+
+    if (nested.length) await Promise.all(nested)
   }
 
-  for (const bucket of LIBRARY_BUCKETS) {
-    try {
-      await walk(bucket, '')
-    } catch {
-      // Storage list é complementar
-    }
-  }
+  await Promise.all(
+    LIBRARY_BUCKETS.map(async (bucket) => {
+      try {
+        await walk(bucket, '')
+      } catch {
+        // Storage list é complementar
+      }
+    }),
+  )
 
   return [...folders].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+}
+
+/** @deprecated use listStorageFolderMarkers + foldersFromMidiaItems */
+export async function listMidiaFolders(): Promise<string[]> {
+  const [fromMedia, fromStorage] = await Promise.all([
+    fetchMidia().then(foldersFromMidiaItems),
+    listStorageFolderMarkers(),
+  ])
+  return [...new Set([...fromMedia, ...fromStorage])].sort((a, b) =>
+    a.localeCompare(b, 'pt-BR'),
+  )
 }
 
 async function ensureFolderInBucket(bucket: LibraryBucket, folder: string) {
@@ -376,15 +402,18 @@ export async function createMidiaFolder(folderInput: string) {
   if (!folder) throw new Error('Informe um nome de pasta válido.')
 
   // Cria a pasta em todos os buckets da biblioteca (fotos, podcast, livros, documentos)
-  const errors: string[] = []
-  for (const bucket of LIBRARY_BUCKETS) {
-    try {
-      await ensureFolderInBucket(bucket, folder)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      errors.push(`${bucket}: ${message}`)
-    }
-  }
+  const results = await Promise.allSettled(
+    LIBRARY_BUCKETS.map((bucket) => ensureFolderInBucket(bucket, folder)),
+  )
+
+  const errors = results
+    .map((result, index) => {
+      if (result.status === 'fulfilled') return null
+      const message =
+        result.reason instanceof Error ? result.reason.message : String(result.reason)
+      return `${LIBRARY_BUCKETS[index]}: ${message}`
+    })
+    .filter(Boolean) as string[]
 
   if (errors.length === LIBRARY_BUCKETS.length) {
     throw new Error(errors.join('\n'))

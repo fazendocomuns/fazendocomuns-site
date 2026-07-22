@@ -651,13 +651,13 @@ export function MediaLibraryPage() {
               onClick={() => setPreviewItem(item)}
               className="group cursor-grab overflow-hidden rounded-2xl border border-border/60 bg-card text-left transition-shadow hover:shadow-md active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted/50 p-2">
                 {item.type === 'image' ? (
                   <img
                     src={item.url}
                     alt={item.alt}
                     draggable={false}
-                    className="size-full object-cover transition-transform group-hover:scale-105"
+                    className="max-h-full max-w-full object-contain"
                   />
                 ) : (
                   <div className="flex size-full flex-col items-center justify-center gap-2">
