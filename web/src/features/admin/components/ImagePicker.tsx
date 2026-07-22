@@ -1,23 +1,43 @@
 'use client'
 
 import { useMemo, useRef, useState } from 'react'
-import { ImageIcon, Loader2, Search, Upload, X } from 'lucide-react'
+import {
+  ChevronRight,
+  Folder,
+  Home,
+  ImageIcon,
+  Loader2,
+  Search,
+  Upload,
+  X,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { isSupabaseConfigured } from '@/lib/supabase/env'
 import { isSupabaseReady } from '@/lib/supabase/client'
-import { useMidiaLibrary, useMidiaMutations } from '@/features/admin/api/midia'
+import {
+  useMidiaFolders,
+  useMidiaLibrary,
+  useMidiaMutations,
+} from '@/features/admin/api/midia'
 import { useAdminStore } from '@/features/admin/store/adminStore'
 import { useAdminUiStore } from '@/features/admin/store/adminUiStore'
 import { MediaThumbnail } from '@/features/admin/components/MediaThumbnail'
+import {
+  childFolderNames,
+  looksGenericFileName,
+  normalizeFolder,
+} from '@/integrations/supabase/repositories/midiaRepository'
 import { cn } from '@/lib/utils'
 import type { MediaItem } from '@/features/admin/types'
 
@@ -27,6 +47,12 @@ interface ImagePickerProps {
   label?: string
   error?: string
   className?: string
+}
+
+function joinFolder(parent: string, child: string): string {
+  const next = normalizeFolder(child)
+  if (!next) return parent
+  return parent ? `${parent}/${next}` : next
 }
 
 /**
@@ -42,38 +68,78 @@ export function ImagePicker({
 }: ImagePickerProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [currentFolder, setCurrentFolder] = useState('')
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [pendingName, setPendingName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
   const mockLibrary = useAdminStore((s) => s.mediaLibrary)
   const { data: remoteLibrary = [], isLoading } = useMidiaLibrary()
+  const { data: folders = [] } = useMidiaFolders()
   const { upload } = useMidiaMutations()
   const showToast = useAdminUiStore((s) => s.showToast)
 
   const mediaLibrary = isSupabaseConfigured() ? remoteLibrary : mockLibrary
+
+  const breadcrumb = useMemo(
+    () => (currentFolder ? currentFolder.split('/') : []),
+    [currentFolder],
+  )
+
+  const subfolders = useMemo(
+    () => childFolderNames(folders, currentFolder),
+    [folders, currentFolder],
+  )
+
   const images = useMemo(() => {
-    const list = mediaLibrary.filter((m) => m.type === 'image')
+    let list = mediaLibrary.filter((m) => m.type === 'image')
     const query = search.trim().toLowerCase()
-    if (!query) return list
-    return list.filter(
-      (item) =>
-        item.name.toLowerCase().includes(query) ||
-        item.alt.toLowerCase().includes(query) ||
-        (item.folder ?? '').toLowerCase().includes(query),
-    )
-  }, [mediaLibrary, search])
+
+    if (query) {
+      list = list.filter(
+        (item) =>
+          item.name.toLowerCase().includes(query) ||
+          item.alt.toLowerCase().includes(query) ||
+          (item.folder ?? '').toLowerCase().includes(query),
+      )
+    } else {
+      list = list.filter((item) => (item.folder ?? '') === currentFolder)
+    }
+
+    return list
+  }, [mediaLibrary, search, currentFolder])
 
   function choose(item: MediaItem) {
     onChange(item.url)
     setOpen(false)
   }
 
-  async function handleUpload(file: File) {
+  function requestUpload(file: File) {
+    setPendingFile(file)
+    setPendingName(looksGenericFileName(file.name) ? '' : file.name)
+  }
+
+  async function confirmUpload() {
+    if (!pendingFile) return
     if (!isSupabaseReady()) {
       showToast('Upload disponível apenas com Supabase ativo.', 'error')
       return
     }
+    const displayName = pendingName.trim()
+    if (!displayName) {
+      showToast('Informe um nome para o arquivo.', 'error')
+      return
+    }
+
     try {
-      const item = await upload.mutateAsync(file)
+      const item = await upload.mutateAsync({
+        file: pendingFile,
+        folder: currentFolder,
+        displayName,
+      })
       onChange(item.url)
+      setPendingFile(null)
+      setPendingName('')
       setOpen(false)
       showToast('Imagem enviada com sucesso!')
     } catch {
@@ -147,7 +213,10 @@ export function ImagePicker({
             open={open}
             onOpenChange={(next) => {
               setOpen(next)
-              if (!next) setSearch('')
+              if (!next) {
+                setSearch('')
+                setCurrentFolder('')
+              }
             }}
           >
             <DialogTrigger asChild>
@@ -162,6 +231,9 @@ export function ImagePicker({
             >
               <DialogHeader>
                 <DialogTitle>Selecionar imagem</DialogTitle>
+                <DialogDescription>
+                  Navegue pelas pastas ou busque pelo nome do arquivo.
+                </DialogDescription>
               </DialogHeader>
 
               <div style={{ position: 'relative' }}>
@@ -186,6 +258,48 @@ export function ImagePicker({
                 />
               </div>
 
+              {!search.trim() ? (
+                <nav
+                  aria-label="Pasta atual"
+                  className="flex flex-wrap items-center gap-1 font-ui text-sm text-muted-foreground"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setCurrentFolder('')}
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-muted hover:text-foreground',
+                      !currentFolder && 'bg-muted font-medium text-foreground',
+                    )}
+                  >
+                    <Home className="size-3.5" />
+                    Raiz
+                  </button>
+                  {breadcrumb.map((segment, index) => {
+                    const path = breadcrumb.slice(0, index + 1).join('/')
+                    const isLast = index === breadcrumb.length - 1
+                    return (
+                      <span key={path} className="inline-flex items-center gap-1">
+                        <ChevronRight className="size-3.5 opacity-50" />
+                        <button
+                          type="button"
+                          onClick={() => setCurrentFolder(path)}
+                          className={cn(
+                            'rounded-md px-2 py-1 transition-colors hover:bg-muted hover:text-foreground',
+                            isLast && 'bg-muted font-medium text-foreground',
+                          )}
+                        >
+                          {segment}
+                        </button>
+                      </span>
+                    )
+                  })}
+                </nav>
+              ) : (
+                <p className="font-ui text-xs text-muted-foreground">
+                  Buscando em todas as pastas…
+                </p>
+              )}
+
               {isLoading ? (
                 <div style={{ minHeight: 280, display: 'grid', placeItems: 'center' }}>
                   <Loader2
@@ -194,9 +308,13 @@ export function ImagePicker({
                     aria-label="Carregando"
                   />
                 </div>
-              ) : images.length === 0 ? (
+              ) : !search.trim() && subfolders.length === 0 && images.length === 0 ? (
                 <p className="py-10 text-center font-ui text-sm text-muted-foreground">
-                  Nenhuma imagem encontrada na biblioteca.
+                  Pasta vazia. Envie uma imagem ou escolha outra pasta.
+                </p>
+              ) : images.length === 0 && search.trim() ? (
+                <p className="py-10 text-center font-ui text-sm text-muted-foreground">
+                  Nenhuma imagem encontrada.
                 </p>
               ) : (
                 <div
@@ -209,6 +327,76 @@ export function ImagePicker({
                     paddingBottom: 8,
                   }}
                 >
+                  {!search.trim() &&
+                    subfolders.map((name) => {
+                      const next = joinFolder(currentFolder, name)
+                      return (
+                        <div
+                          key={next}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setCurrentFolder(next)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              setCurrentFolder(next)
+                            }
+                          }}
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            margin: 0,
+                            padding: 0,
+                            cursor: 'pointer',
+                            background: '#fff',
+                            border: '2px solid #e8e0d4',
+                            borderRadius: 12,
+                            overflow: 'hidden',
+                            outline: 'none',
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: '100%',
+                              aspectRatio: '1 / 1',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: '#fff8eb',
+                            }}
+                          >
+                            <Folder className="size-12 text-amber-700/80" />
+                          </div>
+                          <div style={{ padding: '8px 10px 10px' }}>
+                            <div
+                              style={{
+                                fontFamily: 'var(--font-ui), system-ui, sans-serif',
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: '#1a1612',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                              title={name}
+                            >
+                              {name}
+                            </div>
+                            <div
+                              style={{
+                                marginTop: 2,
+                                fontFamily: 'var(--font-ui), system-ui, sans-serif',
+                                fontSize: 11,
+                                color: '#7a6b58',
+                              }}
+                            >
+                              Pasta
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+
                   {images.map((item) => {
                     const selected = value === item.url
                     return (
@@ -267,7 +455,7 @@ export function ImagePicker({
                           >
                             {item.name}
                           </div>
-                          {item.folder ? (
+                          {(search.trim() ? item.folder : null) ? (
                             <div
                               style={{
                                 marginTop: 2,
@@ -301,7 +489,7 @@ export function ImagePicker({
                 className="hidden"
                 onChange={(event) => {
                   const file = event.target.files?.[0]
-                  if (file) void handleUpload(file)
+                  if (file) requestUpload(file)
                   event.target.value = ''
                 }}
               />
@@ -327,6 +515,66 @@ export function ImagePicker({
           )}
         </div>
       </div>
+
+      <Dialog
+        open={Boolean(pendingFile)}
+        onOpenChange={(next) => {
+          if (!next) {
+            setPendingFile(null)
+            setPendingName('')
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nome do arquivo</DialogTitle>
+            <DialogDescription>
+              Escolha um nome fácil de buscar (ex.: nome da pessoa).
+              {pendingFile && looksGenericFileName(pendingFile.name)
+                ? ' O arquivo veio com um ID genérico.'
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={pendingName}
+            onChange={(e) => setPendingName(e.target.value)}
+            placeholder="ex.: Maria Silva.jpg"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                void confirmUpload()
+              }
+            }}
+          />
+          {pendingFile ? (
+            <p className="truncate font-ui text-xs text-muted-foreground">
+              Original: {pendingFile.name}
+            </p>
+          ) : null}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setPendingFile(null)
+                setPendingName('')
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={!pendingName.trim() || upload.isPending}
+              onClick={() => void confirmUpload()}
+            >
+              {upload.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : null}
+              Enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {error ? (
         <p className="text-sm text-brand-red" role="alert">

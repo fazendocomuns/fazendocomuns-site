@@ -233,6 +233,52 @@ function buildPreferredFileName(fileName: string, mime: string): string {
   return `${sanitizeBaseName(fileName)}.${ext}`
 }
 
+/** Nome exibido (mantém espaços/acentos leves; remove só path separators). */
+export function resolveDisplayName(input: string, mime = '', fallbackExt = 'bin'): string {
+  const trimmed = input.trim()
+  const ext =
+    extensionFromName(trimmed) ||
+    (mime ? MIME_EXT[mime] : undefined) ||
+    fallbackExt
+  const baseRaw = trimmed.includes('.')
+    ? trimmed.slice(0, trimmed.lastIndexOf('.'))
+    : trimmed
+  const base = baseRaw.replace(/[\\/]+/g, '-').trim().slice(0, 120) || 'arquivo'
+  return `${base}.${ext}`
+}
+
+/** Detecta nomes genéricos (ex.: IDs do Google Drive). */
+export function looksGenericFileName(fileName: string): boolean {
+  const base = fileName.includes('.')
+    ? fileName.slice(0, fileName.lastIndexOf('.'))
+    : fileName
+  if (base.length < 16) return false
+  // Só letras/números/_/- sem espaços e bem longo
+  if (!/^[A-Za-z0-9_-]+$/.test(base)) return false
+  if (base.length >= 20 && /[0-9]/.test(base) && /[A-Za-z]/.test(base)) return true
+  return false
+}
+
+/** Subpastas imediatas a partir de uma lista de pastas. */
+export function childFolderNames(allFolders: string[], current: string): string[] {
+  const prefix = current ? `${current}/` : ''
+  const names = new Set<string>()
+
+  for (const folder of allFolders) {
+    if (current) {
+      if (!folder.startsWith(prefix)) continue
+      const rest = folder.slice(prefix.length)
+      const segment = rest.split('/')[0]
+      if (segment) names.add(segment)
+    } else {
+      const segment = folder.split('/')[0]
+      if (segment) names.add(segment)
+    }
+  }
+
+  return [...names].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+}
+
 async function storageObjectExists(bucket: string, path: string): Promise<boolean> {
   const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''
   const name = path.includes('/') ? path.slice(path.lastIndexOf('/') + 1) : path
@@ -555,11 +601,13 @@ export async function uploadMidiaAsset(
   file: File,
   uploadedBy?: string,
   folder = '',
+  displayName?: string,
 ): Promise<MediaItem> {
   const normalizedFolder = normalizeFolder(folder)
   const mime = await resolveMime(file)
   const bucket = bucketForMime(mime)
-  const path = await buildStoragePath(bucket, normalizedFolder, file.name, mime)
+  const label = resolveDisplayName(displayName?.trim() || file.name, mime)
+  const path = await buildStoragePath(bucket, normalizedFolder, label, mime)
 
   if (normalizedFolder) {
     await ensureFolderInBucket(bucket, normalizedFolder)
@@ -579,20 +627,20 @@ export async function uploadMidiaAsset(
       upsert: false,
     }))
   } catch (err) {
-    throw formatStorageError(err, file.name, mime)
+    throw formatStorageError(err, label, mime)
   }
 
   const { data, error } = await supabase
     .from('midia')
     .insert({
-      name: buildPreferredFileName(file.name, mime),
+      name: label,
       bucket,
       path,
       public_url: publicUrl,
       mime_type: mime || null,
       size_bytes: file.size,
       media_type: mapMediaType(mime),
-      alt: file.name,
+      alt: label,
       uploaded_by: uploadedBy ?? null,
     })
     .select('*')
@@ -607,15 +655,17 @@ export async function uploadMidiaAssets(
   uploadedBy?: string,
   folder = '',
   onProgress?: (done: number, total: number, fileName: string) => void,
+  displayNames?: Array<string | undefined>,
 ): Promise<{ uploaded: MediaItem[]; errors: string[] }> {
   const uploaded: MediaItem[] = []
   const errors: string[] = []
 
   for (let i = 0; i < files.length; i += 1) {
     const file = files[i]
-    onProgress?.(i, files.length, file.name)
+    const label = displayNames?.[i]?.trim() || file.name
+    onProgress?.(i, files.length, label)
     try {
-      uploaded.push(await uploadMidiaAsset(file, uploadedBy, folder))
+      uploaded.push(await uploadMidiaAsset(file, uploadedBy, folder, label))
     } catch (err) {
       const message = err instanceof Error ? err.message : 'erro desconhecido'
       errors.push(message.includes(file.name) ? message : `${file.name}: ${message}`)
@@ -629,6 +679,44 @@ export async function uploadMidiaAssets(
   }
 
   return { uploaded, errors }
+}
+
+/** Renomeia o arquivo (nome exibido + caminho no Storage). */
+export async function renameMidiaAsset(id: string, newNameInput: string) {
+  const { data: row, error } = await supabase.from('midia').select('*').eq('id', id).single()
+  if (error) throw error
+
+  const mime = row.mime_type || 'application/octet-stream'
+  const fallbackExt =
+    extensionFromName(row.path) || extensionFromName(row.name) || MIME_EXT[mime] || 'bin'
+  const label = resolveDisplayName(newNameInput, mime, fallbackExt)
+  const folder = folderFromPath(row.path)
+  const preferredStorage = buildPreferredFileName(label, mime)
+  let nextPath = folder ? `${folder}/${preferredStorage}` : preferredStorage
+
+  if (nextPath !== row.path) {
+    if (await storageObjectExists(row.bucket, nextPath)) {
+      nextPath = await buildStoragePath(row.bucket, folder, label, mime)
+    }
+    const { error: moveError } = await supabase.storage.from(row.bucket).move(row.path, nextPath)
+    if (moveError) throw moveError
+  }
+
+  const { data: urlData } = supabase.storage.from(row.bucket).getPublicUrl(nextPath)
+  const { data, error: updateError } = await supabase
+    .from('midia')
+    .update({
+      name: label,
+      alt: label,
+      path: nextPath,
+      public_url: urlData.publicUrl,
+    })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (updateError) throw updateError
+
+  return mapMidia(data)
 }
 
 /** Move um arquivo de mídia para outra pasta (ou raiz). */

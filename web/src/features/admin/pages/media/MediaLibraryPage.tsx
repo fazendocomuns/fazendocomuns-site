@@ -40,13 +40,17 @@ import {
   useMidiaMutations,
 } from '@/features/admin/api/midia'
 import { formatRelativeDate } from '@/features/admin/lib/formatters'
-import { normalizeFolder } from '@/integrations/supabase/repositories/midiaRepository'
+import {
+  looksGenericFileName,
+  normalizeFolder,
+} from '@/integrations/supabase/repositories/midiaRepository'
 import { useAdminUiStore } from '@/features/admin/store/adminUiStore'
 import type { MediaItem } from '@/features/admin/types'
 import { isSupabaseReady } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 type MediaTypeFilter = 'all' | MediaItem['type']
+type PendingUpload = { file: File; displayName: string; folder: string }
 
 const ACCEPT =
   'image/*,video/*,audio/*,application/pdf,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif,.mp4,.webm,.mov,.mp3,.wav,.pdf'
@@ -85,6 +89,7 @@ export function MediaLibraryPage() {
     uploadMany,
     createFolder,
     renameFolder,
+    renameFile,
     deleteFolder,
     moveFile,
     remove,
@@ -107,6 +112,9 @@ export function MediaLibraryPage() {
   const [draggingMediaId, setDraggingMediaId] = useState<string | null>(null)
   const [dropTargetFolder, setDropTargetFolder] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
+  const [pendingUploads, setPendingUploads] = useState<PendingUpload[] | null>(null)
+  const [renameFileItem, setRenameFileItem] = useState<MediaItem | null>(null)
+  const [renameFileValue, setRenameFileValue] = useState('')
 
   const breadcrumb = useMemo(
     () => (currentFolder ? currentFolder.split('/') : []),
@@ -151,25 +159,46 @@ export function MediaLibraryPage() {
     uploadMany.isPending ||
     createFolder.isPending ||
     renameFolder.isPending ||
+    renameFile.isPending ||
     deleteFolder.isPending ||
     moveFile.isPending ||
     remove.isPending
 
-  async function handleUploadFiles(
-    fileList: FileList | File[],
-    targetFolder = currentFolder,
-  ) {
+  function queueUploadFiles(fileList: FileList | File[], targetFolder = currentFolder) {
     const files = Array.from(fileList).filter((file) => file.size > 0)
     if (files.length === 0) {
       showToast('Nenhum arquivo válido selecionado.', 'error')
       return
     }
 
+    setPendingUploads(
+      files.map((file) => ({
+        file,
+        folder: targetFolder,
+        displayName: looksGenericFileName(file.name) ? '' : file.name,
+      })),
+    )
+  }
+
+  async function confirmPendingUploads() {
+    if (!pendingUploads?.length) return
+    const missing = pendingUploads.some((item) => !item.displayName.trim())
+    if (missing) {
+      showToast('Informe um nome para cada arquivo.', 'error')
+      return
+    }
+
+    const files = pendingUploads.map((item) => item.file)
+    const displayNames = pendingUploads.map((item) => item.displayName.trim())
+    const targetFolder = pendingUploads[0]?.folder ?? currentFolder
+    setPendingUploads(null)
+
     setUploadProgress(`Enviando 0/${files.length}…`)
     try {
       const { uploaded, errors } = await uploadMany.mutateAsync({
         files,
         folder: targetFolder,
+        displayNames,
         onProgress: (done, total, fileName) => {
           if (done >= total) {
             setUploadProgress(`Finalizando ${total} arquivo(s)…`)
@@ -197,6 +226,26 @@ export function MediaLibraryPage() {
     } catch (err) {
       setUploadProgress(null)
       const message = err instanceof Error ? err.message : 'Falha no upload. Tente novamente.'
+      showToast(message, 'error')
+    }
+  }
+
+  async function handleRenameFile() {
+    if (!renameFileItem) return
+    const next = renameFileValue.trim()
+    if (!next) {
+      showToast('Informe o novo nome do arquivo.', 'error')
+      return
+    }
+
+    try {
+      const updated = await renameFile.mutateAsync({ id: renameFileItem.id, name: next })
+      setRenameFileItem(null)
+      setRenameFileValue('')
+      setPreviewItem(updated)
+      showToast('Arquivo renomeado!')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Não foi possível renomear o arquivo.'
       showToast(message, 'error')
     }
   }
@@ -338,7 +387,7 @@ export function MediaLibraryPage() {
               className="hidden"
               onChange={(event) => {
                 if (event.target.files?.length) {
-                  void handleUploadFiles(event.target.files)
+                  void queueUploadFiles(event.target.files)
                 }
                 event.target.value = ''
               }}
@@ -390,7 +439,7 @@ export function MediaLibraryPage() {
           setDraggingUpload(false)
           if (isInternalMediaDrag(e)) return
           if (e.dataTransfer.files?.length) {
-            void handleUploadFiles(e.dataTransfer.files)
+            void queueUploadFiles(e.dataTransfer.files)
           }
         }}
         className={cn(
@@ -436,7 +485,7 @@ export function MediaLibraryPage() {
               return
             }
             if (e.dataTransfer.files?.length) {
-              void handleUploadFiles(e.dataTransfer.files, '')
+              void queueUploadFiles(e.dataTransfer.files, '')
             }
           }}
           className={cn(
@@ -475,7 +524,7 @@ export function MediaLibraryPage() {
                     return
                   }
                   if (e.dataTransfer.files?.length) {
-                    void handleUploadFiles(e.dataTransfer.files, path)
+                    void queueUploadFiles(e.dataTransfer.files, path)
                   }
                 }}
                 className={cn(
@@ -566,7 +615,7 @@ export function MediaLibraryPage() {
                     return
                   }
                   if (e.dataTransfer.files?.length) {
-                    void handleUploadFiles(e.dataTransfer.files, next)
+                    void queueUploadFiles(e.dataTransfer.files, next)
                   }
                 }}
                 className={cn(
@@ -921,6 +970,18 @@ export function MediaLibraryPage() {
                   variant="outline"
                   disabled={!isSupabaseReady() || busy}
                   onClick={() => {
+                    setRenameFileItem(previewItem)
+                    setRenameFileValue(previewItem.name)
+                  }}
+                >
+                  <Pencil className="size-4" />
+                  Renomear
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!isSupabaseReady() || busy}
+                  onClick={() => {
                     setMoveFolder(previewItem.folder ? previewItem.folder : '__root__')
                     setMoveItem(previewItem)
                   }}
@@ -945,6 +1006,120 @@ export function MediaLibraryPage() {
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(pendingUploads)}
+        onOpenChange={(open) => {
+          if (!open) setPendingUploads(null)
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Nomear arquivos</DialogTitle>
+            <DialogDescription>
+              Use nomes claros para facilitar a busca depois. Arquivos do Drive costumam vir com
+              IDs genéricos.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[50vh] space-y-3 overflow-y-auto pr-1">
+            {pendingUploads?.map((item, index) => (
+              <div key={`${item.file.name}-${index}`} className="space-y-1.5">
+                <Label htmlFor={`upload-name-${index}`}>
+                  Arquivo {index + 1}
+                  {looksGenericFileName(item.file.name) ? (
+                    <span className="text-brand-red"> (nome genérico — renomeie)</span>
+                  ) : null}
+                </Label>
+                <Input
+                  id={`upload-name-${index}`}
+                  value={item.displayName}
+                  placeholder="ex.: Maria Silva.jpg"
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setPendingUploads((prev) =>
+                      prev
+                        ? prev.map((entry, i) =>
+                            i === index ? { ...entry, displayName: value } : entry,
+                          )
+                        : prev,
+                    )
+                  }}
+                />
+                <p className="truncate font-ui text-[11px] text-muted-foreground">
+                  Original: {item.file.name}
+                </p>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPendingUploads(null)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={uploadMany.isPending}
+              onClick={() => void confirmPendingUploads()}
+            >
+              {uploadMany.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : null}
+              Enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(renameFileItem)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRenameFileItem(null)
+            setRenameFileValue('')
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Renomear arquivo</DialogTitle>
+            <DialogDescription>
+              O nome aparece na biblioteca e ajuda na busca. A extensão é mantida se você omitir.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={renameFileValue}
+            onChange={(e) => setRenameFileValue(e.target.value)}
+            placeholder="Novo nome"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                void handleRenameFile()
+              }
+            }}
+          />
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setRenameFileItem(null)
+                setRenameFileValue('')
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={!renameFileValue.trim() || renameFile.isPending}
+              onClick={() => void handleRenameFile()}
+            >
+              {renameFile.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : null}
+              Salvar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

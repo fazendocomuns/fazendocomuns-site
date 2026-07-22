@@ -8,6 +8,7 @@ import {
   foldersFromMidiaItems,
   listStorageFolderMarkers,
   moveMidiaAsset,
+  renameMidiaAsset,
   renameMidiaFolder,
   uploadMidiaAsset,
   uploadMidiaAssets,
@@ -21,11 +22,21 @@ export const midiaKeys = {
   folders: ['admin', 'midia', 'folders'] as const,
 }
 
-export type MidiaUploadInput = File | { file: File; folder?: string }
+export type MidiaUploadInput =
+  | File
+  | { file: File; folder?: string; displayName?: string }
 
-function resolveUpload(input: MidiaUploadInput): { file: File; folder: string } {
+function resolveUpload(input: MidiaUploadInput): {
+  file: File
+  folder: string
+  displayName?: string
+} {
   if (input instanceof File) return { file: input, folder: '' }
-  return { file: input.file, folder: input.folder ?? '' }
+  return {
+    file: input.file,
+    folder: input.folder ?? '',
+    displayName: input.displayName,
+  }
 }
 
 export function useMidiaLibrary() {
@@ -89,8 +100,8 @@ export function useMidiaMutations() {
   return {
     upload: useMutation({
       mutationFn: (input: MidiaUploadInput) => {
-        const { file, folder } = resolveUpload(input)
-        return uploadMidiaAsset(file, user?.id, folder)
+        const { file, folder, displayName } = resolveUpload(input)
+        return uploadMidiaAsset(file, user?.id, folder, displayName)
       },
       onSuccess: invalidate,
     }),
@@ -98,6 +109,7 @@ export function useMidiaMutations() {
       mutationFn: (input: {
         files: File[]
         folder?: string
+        displayNames?: Array<string | undefined>
         onProgress?: (done: number, total: number, fileName: string) => void
       }) =>
         uploadMidiaAssets(
@@ -105,6 +117,7 @@ export function useMidiaMutations() {
           user?.id,
           input.folder ?? '',
           input.onProgress,
+          input.displayNames,
         ),
       onSuccess: invalidate,
     }),
@@ -114,6 +127,10 @@ export function useMidiaMutations() {
     }),
     renameFolder: useMutation({
       mutationFn: (input: { from: string; to: string }) => renameMidiaFolder(input.from, input.to),
+      onSuccess: invalidate,
+    }),
+    renameFile: useMutation({
+      mutationFn: (input: { id: string; name: string }) => renameMidiaAsset(input.id, input.name),
       onSuccess: invalidate,
     }),
     deleteFolder: useMutation({
