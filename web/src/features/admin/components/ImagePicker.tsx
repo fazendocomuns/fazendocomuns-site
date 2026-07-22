@@ -19,6 +19,8 @@ import { useAdminStore } from '@/features/admin/store/adminStore'
 import { useAdminUiStore } from '@/features/admin/store/adminUiStore'
 import { MediaThumbnail } from '@/features/admin/components/MediaThumbnail'
 import { cn } from '@/lib/utils'
+import type { MediaItem } from '@/features/admin/types'
+import pickerStyles from './ImagePicker.module.css'
 
 interface ImagePickerProps {
   value: string
@@ -26,6 +28,11 @@ interface ImagePickerProps {
   label?: string
   error?: string
   className?: string
+}
+
+function selectItem(item: MediaItem, onChange: (url: string) => void, close: () => void) {
+  onChange(item.url)
+  close()
 }
 
 export function ImagePicker({
@@ -77,57 +84,21 @@ export function ImagePicker({
       <Label>{label}</Label>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-        <div
-          style={{
-            position: 'relative',
-            width: 160,
-            height: 160,
-            borderRadius: 12,
-            border: '1px solid #e8e0d4',
-            overflow: 'hidden',
-            flexShrink: 0,
-          }}
-        >
+        <div className={pickerStyles.preview}>
           {value ? (
             <>
               <MediaThumbnail url={value} alt="" size={160} />
               <button
                 type="button"
+                className={pickerStyles.removeBtn}
                 onClick={() => onChange('')}
                 aria-label="Remover imagem"
-                style={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  zIndex: 2,
-                  width: 28,
-                  height: 28,
-                  border: 'none',
-                  borderRadius: 999,
-                  background: 'rgba(26,22,18,0.8)',
-                  color: '#fff',
-                  display: 'grid',
-                  placeItems: 'center',
-                  cursor: 'pointer',
-                }}
               >
                 <X width={14} height={14} />
               </button>
             </>
           ) : (
-            <div
-              style={{
-                width: 160,
-                height: 160,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                background: '#efe8de',
-                color: '#7a6b58',
-              }}
-            >
+            <div className={pickerStyles.emptyPreview}>
               <ImageIcon width={28} height={28} opacity={0.5} />
               <span className="font-ui text-xs">Sem imagem</span>
             </div>
@@ -153,19 +124,8 @@ export function ImagePicker({
                 <DialogTitle>Selecionar imagem</DialogTitle>
               </DialogHeader>
 
-              <div style={{ position: 'relative' }}>
-                <Search
-                  style={{
-                    position: 'absolute',
-                    left: 12,
-                    top: '50%',
-                    width: 16,
-                    height: 16,
-                    transform: 'translateY(-50%)',
-                    color: '#7a6b58',
-                    pointerEvents: 'none',
-                  }}
-                />
+              <div className={pickerStyles.searchWrap}>
+                <Search className={pickerStyles.searchIcon} aria-hidden />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -175,7 +135,7 @@ export function ImagePicker({
               </div>
 
               {isLoading ? (
-                <div style={{ minHeight: 320, display: 'grid', placeItems: 'center' }}>
+                <div className={pickerStyles.loading}>
                   <Loader2
                     className="animate-spin text-primary"
                     style={{ width: 32, height: 32 }}
@@ -187,86 +147,42 @@ export function ImagePicker({
                   Nenhuma imagem encontrada na biblioteca.
                 </p>
               ) : (
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, 168px)',
-                    justifyContent: 'center',
-                    gap: 16,
-                    maxHeight: 'min(60vh, 480px)',
-                    overflowY: 'auto',
-                    padding: '4px 2px 12px',
-                  }}
-                >
+                <div className={pickerStyles.grid}>
                   {images.map((item) => {
                     const selected = value === item.url
                     return (
-                      <button
+                      <div
                         key={item.id}
-                        type="button"
-                        onClick={() => {
-                          onChange(item.url)
-                          setOpen(false)
-                        }}
-                        style={{
-                          width: 168,
-                          padding: 0,
-                          margin: 0,
-                          border: selected ? '2px solid #ef3220' : '2px solid #e8e0d4',
-                          borderRadius: 12,
-                          background: '#fff',
-                          cursor: 'pointer',
-                          overflow: 'hidden',
-                          textAlign: 'left',
-                          boxShadow: selected ? '0 0 0 3px rgba(239,50,32,0.18)' : 'none',
-                          display: 'flex',
-                          flexDirection: 'column',
+                        role="button"
+                        tabIndex={0}
+                        className={cn(pickerStyles.card, selected && pickerStyles.cardSelected)}
+                        onClick={() => selectItem(item, onChange, () => setOpen(false))}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            selectItem(item, onChange, () => setOpen(false))
+                          }
                         }}
                       >
-                        <MediaThumbnail
-                          url={item.url}
-                          alt={item.alt || item.name}
-                          size={164}
-                        />
-                        <div
-                          style={{
-                            borderTop: '1px solid #e8e0d4',
-                            padding: '8px 10px',
-                            background: '#fff',
-                          }}
-                        >
-                          <div
-                            className="font-ui"
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 600,
-                              color: '#1a1612',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                            title={item.name}
-                          >
+                        {/* Imagem FORA de <button> — evita estilos de button cortarem a foto */}
+                        <div className={pickerStyles.cardMedia}>
+                          <MediaThumbnail
+                            url={item.url}
+                            alt={item.alt || item.name}
+                            size={160}
+                          />
+                        </div>
+                        <div className={pickerStyles.cardMeta}>
+                          <div className={pickerStyles.cardName} title={item.name}>
                             {item.name}
                           </div>
                           {item.folder ? (
-                            <div
-                              className="font-ui"
-                              style={{
-                                marginTop: 2,
-                                fontSize: 11,
-                                color: '#7a6b58',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                              title={item.folder}
-                            >
+                            <div className={pickerStyles.cardFolder} title={item.folder}>
                               {item.folder}
                             </div>
                           ) : null}
                         </div>
-                      </button>
+                      </div>
                     )
                   })}
                 </div>

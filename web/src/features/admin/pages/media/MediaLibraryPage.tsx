@@ -634,9 +634,10 @@ export function MediaLibraryPage() {
           })}
 
           {filtered.map((item) => (
-            <button
+            <div
               key={item.id}
-              type="button"
+              role="button"
+              tabIndex={0}
               draggable={isSupabaseReady() && !busy}
               onDragStart={(e) => {
                 setDraggingMediaId(item.id)
@@ -649,6 +650,12 @@ export function MediaLibraryPage() {
                 setDropTargetFolder(null)
               }}
               onClick={() => setPreviewItem(item)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  setPreviewItem(item)
+                }
+              }}
               className="group cursor-grab overflow-hidden rounded-2xl border border-border/60 bg-card text-left transition-shadow hover:shadow-md active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div
@@ -713,7 +720,7 @@ export function MediaLibraryPage() {
                   {item.size} · {formatRelativeDate(item.uploadedAt)}
                 </p>
               </div>
-            </button>
+            </div>
           ))}
         </div>
       )}
