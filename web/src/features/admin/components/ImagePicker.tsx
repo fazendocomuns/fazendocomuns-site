@@ -99,7 +99,7 @@ export function ImagePicker({
         >
           {value ? (
             <>
-              <MediaThumbnail url={value} alt="" size={160} />
+              <MediaThumbnail url={value} alt="" fill fit="cover" />
               <button
                 type="button"
                 onClick={() => onChange('')}
@@ -126,8 +126,8 @@ export function ImagePicker({
           ) : (
             <div
               style={{
-                width: 160,
-                height: 160,
+                width: '100%',
+                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -226,54 +226,64 @@ export function ImagePicker({
                         style={{
                           display: 'flex',
                           flexDirection: 'column',
-                          alignItems: 'stretch',
-                          gap: 0,
                           margin: 0,
-                          padding: 8,
+                          padding: 0,
                           cursor: 'pointer',
                           background: '#fff',
                           border: selected ? '2px solid #ef3220' : '2px solid #e8e0d4',
                           borderRadius: 12,
+                          overflow: 'hidden',
                           boxShadow: selected ? '0 0 0 3px rgba(239,50,32,0.18)' : 'none',
                           outline: 'none',
                         }}
                       >
-                        <MediaThumbnail
-                          url={item.url}
-                          alt={item.alt || item.name}
-                          size={140}
-                        />
                         <div
                           style={{
-                            marginTop: 8,
-                            fontFamily: 'var(--font-ui), system-ui, sans-serif',
-                            fontSize: 12,
-                            fontWeight: 600,
-                            color: '#1a1612',
+                            width: '100%',
+                            aspectRatio: '1 / 1',
                             overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
+                            background: '#efe8de',
                           }}
-                          title={item.name}
                         >
-                          {item.name}
+                          <MediaThumbnail
+                            url={item.url}
+                            alt={item.alt || item.name}
+                            fill
+                            fit="cover"
+                          />
                         </div>
-                        {item.folder ? (
+                        <div style={{ padding: '8px 10px 10px' }}>
                           <div
                             style={{
-                              marginTop: 2,
                               fontFamily: 'var(--font-ui), system-ui, sans-serif',
-                              fontSize: 11,
-                              color: '#7a6b58',
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: '#1a1612',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
                             }}
-                            title={item.folder}
+                            title={item.name}
                           >
-                            {item.folder}
+                            {item.name}
                           </div>
-                        ) : null}
+                          {item.folder ? (
+                            <div
+                              style={{
+                                marginTop: 2,
+                                fontFamily: 'var(--font-ui), system-ui, sans-serif',
+                                fontSize: 11,
+                                color: '#7a6b58',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                              title={item.folder}
+                            >
+                              {item.folder}
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                     )
                   })}
