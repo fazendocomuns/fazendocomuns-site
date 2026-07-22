@@ -94,8 +94,10 @@ export function ConsultorFormPage() {
         showToast('Consultor(a) criado com sucesso!')
       }
       router.push('/admin/consultores')
-    } catch {
-      showToast('Não foi possível salvar. Tente novamente.', 'error')
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Não foi possível salvar. Tente novamente.'
+      showToast(message, 'error')
     }
   }
 
