@@ -651,16 +651,33 @@ export function MediaLibraryPage() {
               onClick={() => setPreviewItem(item)}
               className="group cursor-grab overflow-hidden rounded-2xl border border-border/60 bg-card text-left transition-shadow hover:shadow-md active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <div className="relative h-36 w-full shrink-0 overflow-hidden bg-neutral-100 sm:h-40">
+              <div
+                style={{
+                  width: '100%',
+                  height: 160,
+                  minHeight: 160,
+                  backgroundColor: '#f0ebe3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 {item.type === 'image' ? (
-                  <img
-                    src={item.url}
-                    alt={item.alt}
+                  <div
+                    role="img"
+                    aria-label={item.alt}
                     draggable={false}
-                    className="absolute inset-0 h-full w-full object-contain p-2"
+                    style={{
+                      width: '100%',
+                      height: 160,
+                      backgroundImage: `url("${item.url.replace(/"/g, '\\"')}")`,
+                      backgroundSize: 'contain',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                    }}
                   />
                 ) : (
-                  <div className="flex size-full flex-col items-center justify-center gap-2">
+                  <div className="flex flex-col items-center justify-center gap-2">
                     <ImageIcon className="size-10 text-muted-foreground" />
                     <span className="font-ui text-xs uppercase tracking-wide text-muted-foreground">
                       {item.type}
