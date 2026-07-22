@@ -34,7 +34,6 @@ import {
 } from '@/components/ui/dialog'
 import { AdminPageHeader } from '@/features/admin/components/AdminPageHeader'
 import { EmptyState } from '@/features/admin/components/EmptyState'
-import { MediaThumbnail } from '@/features/admin/components/MediaThumbnail'
 import {
   useMidiaFolders,
   useMidiaLibrary,
@@ -662,19 +661,30 @@ export function MediaLibraryPage() {
               <div
                 style={{
                   width: '100%',
-                  display: 'flex',
-                  justifyContent: 'center',
+                  aspectRatio: '1 / 1',
+                  overflow: 'hidden',
                   backgroundColor: '#efe8de',
-                  padding: 8,
                 }}
               >
                 {item.type === 'image' ? (
-                  <MediaThumbnail url={item.url} alt={item.alt} size={160} />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={item.url}
+                    alt={item.alt}
+                    draggable={false}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center center',
+                    }}
+                  />
                 ) : (
                   <div
                     style={{
-                      width: 160,
-                      height: 160,
+                      width: '100%',
+                      height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
