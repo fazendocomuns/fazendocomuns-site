@@ -1,5 +1,3 @@
-'use client'
-
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 import { EventPanelVideo } from '@/features/eventos/components/EventPanelVideo'
 import type { EventPanel } from '@/features/eventos/data/asCriancasFalamContent'

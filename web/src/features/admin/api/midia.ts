@@ -12,6 +12,7 @@ import {
   renameMidiaFolder,
   uploadMidiaAsset,
   uploadMidiaAssets,
+  type LibraryBucket,
 } from '@/integrations/supabase/repositories/midiaRepository'
 import { useAdminStore } from '@/features/admin/store/adminStore'
 import { useAuth } from '@/features/admin/hooks/useAuth'
@@ -122,7 +123,8 @@ export function useMidiaMutations() {
       onSuccess: invalidate,
     }),
     createFolder: useMutation({
-      mutationFn: (folderPath: string) => createMidiaFolder(folderPath),
+      mutationFn: (input: { path: string; bucket: LibraryBucket }) =>
+        createMidiaFolder(input.path, input.bucket),
       onSuccess: invalidate,
     }),
     renameFolder: useMutation({

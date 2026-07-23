@@ -1,5 +1,3 @@
-import anaPaulaPedroImg from '@/assets/imgs/colaboradores/ana-paula-pedro.jpg'
-import { assetSrc } from '@/lib/assetSrc'
 import type { TeamMember } from '@/features/projeto/data/equipeContent'
 
 export const colaboradoresContent = {
@@ -10,7 +8,7 @@ export const colaboradoresContent = {
     {
       id: 'ana-paula-pedro',
       name: 'Ana Paula Pedro',
-      image: assetSrc(anaPaulaPedroImg),
+      image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/colaboradores/1WXWCHcPGqI6gM_LiL4EctJYvmTZaKnUL.jpg',
       roles: [
         'Psicóloga Clínica',
         'Diretora de projetos (Instituto Superior de Educação Pró-Saber)',

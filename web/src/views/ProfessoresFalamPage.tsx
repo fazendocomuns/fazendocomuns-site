@@ -1,5 +1,4 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ArrowLeft } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
@@ -26,11 +25,14 @@ export function ProfessoresFalamPage({ content }: ProfessoresFalamPageProps) {
       <section className="section-padding bg-background" aria-label="Reportagem">
         <div className="container-app">
           <ScrollReveal>
-            <div className="overflow-hidden rounded-2xl shadow-medium">
-              <img
+            <div className="relative aspect-[21/9] overflow-hidden rounded-2xl bg-muted shadow-medium md:aspect-[2.5/1]">
+              <Image
                 src={heroImage}
                 alt={heroImageAlt}
-                className="aspect-[21/9] w-full object-cover md:aspect-[2.5/1]"
+                fill
+                sizes="100vw"
+                quality={75}
+                className="object-cover"
               />
             </div>
           </ScrollReveal>

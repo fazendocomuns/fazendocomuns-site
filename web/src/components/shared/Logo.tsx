@@ -2,8 +2,8 @@
 
 import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
-import { cn } from '@/lib/utils'
 import logoImg from '@/assets/imgs/logo.png'
+import { cn } from '@/lib/utils'
 
 interface LogoProps {
   className?: string
@@ -22,11 +22,12 @@ export function Logo({ className, size = 'md', linkToHome = true }: LogoProps) {
     <Image
       src={logoImg}
       alt="Fazendo Comuns"
-      className={cn('w-auto object-contain', sizeClasses[size], className)}
-      width={160}
-      height={48}
-      priority={size === 'sm'}
-      sizes="160px"
+      className={cn('w-auto object-contain object-left', sizeClasses[size], className)}
+      width={500}
+      height={116}
+      preload={size === 'sm'}
+      sizes="(max-width: 768px) 140px, 180px"
+      style={{ width: 'auto' }}
     />
   )
 
@@ -37,7 +38,7 @@ export function Logo({ className, size = 'md', linkToHome = true }: LogoProps) {
   return (
     <Link
       to="/"
-      className="inline-flex shrink-0 transition-opacity hover:opacity-90"
+      className="inline-flex h-auto max-w-full shrink-0 items-center transition-opacity hover:opacity-90"
       aria-label="Fazendo Comuns — Página inicial"
     >
       {image}

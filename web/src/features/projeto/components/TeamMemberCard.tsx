@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import type { TeamMember } from '@/features/projeto/data/equipeContent'
 
 interface TeamMemberCardProps {
@@ -13,12 +14,13 @@ export function TeamMemberCard({ member, featured = false }: TeamMemberCardProps
       <article className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft">
         <div className="grid gap-0 lg:grid-cols-[minmax(240px,320px)_1fr]">
           <div className="relative aspect-[3/4] overflow-hidden bg-muted lg:aspect-auto lg:min-h-full">
-            <img
+            <Image
               src={member.image}
               alt={member.name}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover object-top"
+              fill
+              sizes="(max-width: 1023px) 100vw, 320px"
+              quality={60}
+              className="object-cover object-top"
             />
           </div>
 
@@ -40,12 +42,13 @@ export function TeamMemberCard({ member, featured = false }: TeamMemberCardProps
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-medium">
       <div className="relative aspect-[4/5] overflow-hidden bg-muted">
-        <img
+        <Image
           src={member.image}
           alt={member.name}
-          loading="lazy"
-          decoding="async"
-          className="h-full w-full object-cover object-top"
+          fill
+          sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+          quality={60}
+          className="object-cover object-top"
         />
       </div>
 

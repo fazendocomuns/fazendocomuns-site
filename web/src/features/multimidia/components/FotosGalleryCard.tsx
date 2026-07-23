@@ -1,7 +1,5 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
-import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import type { FotosGallery } from '@/features/multimidia/data/fotosContent'
 import { cn } from '@/lib/utils'
@@ -33,7 +31,7 @@ export function FotosGalleryCard({ gallery }: FotosGalleryCardProps) {
   const styles = colorStyles[gallery.color]
 
   return (
-    <motion.div whileHover={{ y: -6 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
+    <div className="h-full transition-transform duration-300 hover:-translate-y-1.5 motion-reduce:transform-none motion-reduce:transition-none">
       <Link
         to={gallery.href}
         className={cn(
@@ -42,11 +40,13 @@ export function FotosGalleryCard({ gallery }: FotosGalleryCardProps) {
         )}
       >
         <div className="relative aspect-[4/3] overflow-hidden">
-          <img
+          <Image
             src={gallery.cover}
             alt={gallery.title}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            sizes="(max-width: 767px) 100vw, 50vw"
+            quality={60}
+            className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 via-neutral-900/10 to-transparent" />
           <div
@@ -70,6 +70,6 @@ export function FotosGalleryCard({ gallery }: FotosGalleryCardProps) {
           </span>
         </div>
       </Link>
-    </motion.div>
+    </div>
   )
 }

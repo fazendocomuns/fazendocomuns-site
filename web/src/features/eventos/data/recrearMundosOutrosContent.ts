@@ -1,38 +1,25 @@
-const wixBase = 'https://static.wixstatic.com/media'
+import { livroPdfUrls } from '@/features/livros/data/livroPdfUrls'
 
-function wixImage(
-  fileId: string,
-  ext: 'png' | 'jpeg' | 'jpg',
-  width: number,
-  height: number,
-) {
-  const file = `${fileId}~mv2.${ext}`
-  return `${wixBase}/${file}/v1/fill/w_${width},h_${height},al_c,q_85,usm_0.66_1.00_0.01/${file}`
-}
+const supabaseStorage =
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens'
 
-export const recrearMundosOutrosPoster1 = wixImage(
-  '92a7cc_4d418823ff7642c680c58cfcbb8a9449',
-  'png',
-  424,
-  600,
+const eventoFlyer = (file: string) =>
+  `${supabaseStorage}/capa-de-eventos/capa-evento-em-comum-recrear-em-mundos-outros/${file}`
+
+const livroCover =
+  `${supabaseStorage}/capas-de-livros/capa-do-livro-fazendo-comuns-na-escola-construir-um-mundo-outro.png`
+
+export const recrearMundosOutrosPoster1 = eventoFlyer(
+  'em-comum-recrear-em-mundos-outros-flyer.png',
 )
 
-export const recrearMundosOutrosPoster2 = wixImage(
-  '92a7cc_df51c62cfab443e09564f43fb85c83e7',
-  'png',
-  424,
-  600,
+export const recrearMundosOutrosPoster2 = eventoFlyer(
+  'em-comum-recrear-em-mundos-outros-flyer-02.png',
 )
 
-export const recrearMundosOutrosBookCover = wixImage(
-  '92a7cc_74ba8ef09b3b40d8a1dcaf51b0687ae0',
-  'png',
-  501,
-  735,
-)
+export const recrearMundosOutrosBookCover = livroCover
 
-const bookPdfUrl =
-  'https://www.fazendocomuns.com.br/_files/ugd/92a7cc_cc2e2e2c9cec4a85b6924959deae39a5.pdf'
+const bookPdfUrl = livroPdfUrls.recrearMundosOutros
 
 export const recrearMundosOutrosEvent = {
   title: 'Em Comuns…Recrear em mundos outros',
@@ -45,7 +32,7 @@ export const recrearMundosOutrosEvent = {
     },
     {
       src: recrearMundosOutrosPoster2,
-      alt: 'Cartaz do evento Em Comum — recrear em mundos outros (detalhe)',
+      alt: 'Cartaz do evento Em Comum — recrear em mundos outros (verso)',
     },
   ],
   date: '8 de maio de 2026',

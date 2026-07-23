@@ -1,5 +1,4 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ArrowLeft } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
@@ -64,32 +63,52 @@ function SectionImage({ section }: { section: OQueESection }) {
 
   const isLogos = section.id === 'qualificacao'
   const isIntro = section.id === 'introducao'
+  const isHistorico = section.id === 'historico'
+  const fillsContainer = isIntro || isHistorico
 
   return (
-    <figure className={cn('group', isIntro && 'flex h-full flex-col')}>
+    <figure
+      className={cn(
+        'group',
+        isIntro && 'flex h-full min-h-0 flex-1 flex-col',
+      )}
+    >
       <div
         className={cn(
-          'overflow-hidden rounded-2xl border shadow-medium transition-shadow duration-300 group-hover:shadow-strong',
+          'relative overflow-hidden rounded-2xl border shadow-medium transition-shadow duration-300 group-hover:shadow-strong',
           isLogos
             ? 'border-border/60 bg-muted p-5 md:p-6'
             : 'border-border/60 bg-card',
-          isIntro && 'relative aspect-[4/5] min-h-[20rem] sm:min-h-[24rem] lg:aspect-auto lg:min-h-full lg:flex-1',
+          isIntro &&
+            'relative aspect-[4/5] min-h-[20rem] flex-1 sm:min-h-[24rem] lg:aspect-auto lg:min-h-0',
+          isHistorico && 'relative aspect-[2/1] w-full',
         )}
       >
-        <img
-          src={section.image.src}
-          alt={section.image.alt}
-          className={cn(
-            isLogos && 'mx-auto max-h-48 w-full object-contain md:max-h-56',
-            isIntro && 'absolute inset-0 h-full w-full object-cover object-center',
-            !isLogos && !isIntro && 'aspect-[2/1] w-full object-contain',
-          )}
-          loading="lazy"
-          decoding="async"
-        />
+        {fillsContainer ? (
+          <Image
+            src={section.image.src}
+            alt={section.image.alt}
+            fill
+            sizes="(max-width: 1023px) 100vw, 50vw"
+            quality={60}
+            className="object-cover object-center"
+          />
+        ) : (
+          <Image
+            src={section.image.src}
+            alt={section.image.alt}
+            width={1200}
+            height={600}
+            sizes="(max-width: 1023px) 100vw, 50vw"
+            quality={60}
+            className={cn(
+              isLogos && 'mx-auto h-auto max-h-48 w-full object-contain md:max-h-56',
+            )}
+          />
+        )}
       </div>
       {section.image.caption ? (
-        <figcaption className="mt-3 font-ui text-xs text-muted-foreground md:text-sm">
+        <figcaption className="mt-3 shrink-0 font-ui text-xs text-muted-foreground md:text-sm">
           {section.image.caption}
         </figcaption>
       ) : null}
@@ -154,7 +173,7 @@ export function OQueEPage({ content }: OQueEPageProps) {
       {sections.map((section, sectionIndex) => {
         const hasVisual = Boolean(section.image)
         const imageOnLeft = section.imagePosition === 'left'
-        const isQualificacao = section.id === 'qualificacao'
+        const isIntro = section.id === 'introducao'
 
         return (
           <section
@@ -171,50 +190,53 @@ export function OQueEPage({ content }: OQueEPageProps) {
                 hasVisual ? 'max-w-6xl' : 'max-w-3xl',
               )}
             >
-              <ScrollReveal delay={sectionIndex * 0.05}>
-                {section.title ? (
+              {section.title ? (
+                <ScrollReveal delay={sectionIndex * 0.05}>
                   <SectionHeading id={`${section.id}-title`}>{section.title}</SectionHeading>
-                ) : null}
+                </ScrollReveal>
+              ) : null}
 
-                {isQualificacao ? (
-                  <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
-                    <SectionBody section={section} />
-                    <div className="lg:sticky lg:top-28">
-                      <SectionImage section={section} />
-                    </div>
-                  </div>
-                ) : hasVisual ? (
-                  <div
+              {hasVisual ? (
+                <div
+                  className={cn(
+                    'grid gap-10 lg:grid-cols-2 lg:gap-12',
+                    // Intro: layout normal, imagem acompanha a altura do texto.
+                    // Histórico / Qualificação: imagem sticky enquanto o texto rola.
+                    isIntro ? 'lg:items-stretch' : 'lg:items-start',
+                  )}
+                >
+                  <ScrollReveal
+                    delay={sectionIndex * 0.05}
                     className={cn(
-                      'grid gap-10 lg:grid-cols-2 lg:items-stretch lg:gap-12',
-                      section.title && 'mt-0',
+                      imageOnLeft && 'lg:order-1',
+                      !imageOnLeft && 'lg:order-2',
                     )}
                   >
-                    <div
-                      className={cn(
-                        imageOnLeft && 'lg:order-1',
-                        !imageOnLeft && 'lg:order-2',
-                      )}
-                    >
-                      <SectionBody section={section} />
-                    </div>
+                    <SectionBody section={section} />
+                  </ScrollReveal>
 
-                    <div
-                      className={cn(
-                        'lg:sticky lg:top-28 lg:flex lg:flex-col',
-                        imageOnLeft && 'lg:order-2',
-                        !imageOnLeft && 'lg:order-1',
-                      )}
+                  <div
+                    className={cn(
+                      imageOnLeft && 'lg:order-2',
+                      !imageOnLeft && 'lg:order-1',
+                      // Sticky só em Histórico / Qualificação — intro fica normal
+                      !isIntro && 'lg:sticky lg:top-28',
+                      isIntro && 'h-full lg:flex lg:flex-col',
+                    )}
+                  >
+                    <ScrollReveal
+                      delay={sectionIndex * 0.08}
+                      className={cn(isIntro && 'flex h-full min-h-0 flex-1 flex-col')}
                     >
                       <SectionImage section={section} />
-                    </div>
+                    </ScrollReveal>
                   </div>
-                ) : (
-                  <div className={cn(section.title && 'mt-0')}>
-                    <SectionBody section={section} />
-                  </div>
-                )}
-              </ScrollReveal>
+                </div>
+              ) : (
+                <ScrollReveal delay={sectionIndex * 0.05}>
+                  <SectionBody section={section} />
+                </ScrollReveal>
+              )}
             </div>
           </section>
         )

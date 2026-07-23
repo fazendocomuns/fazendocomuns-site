@@ -1,8 +1,7 @@
-import logoEducacaoImg from '@/assets/imgs/parceiros/logo-educacao.png'
-import cre1Img from '@/assets/imgs/parceiros/cre-1.png'
-import cre2Img from '@/assets/imgs/parceiros/cre-2.png'
-import cre3Img from '@/assets/imgs/parceiros/cre-3.png'
-import { assetSrc } from '@/lib/assetSrc'
+const logoBase =
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/fazendocomuns-logo'
+
+const logo = (file: string) => `${logoBase}/${file}`
 
 export interface PartnerLogo {
   src: string
@@ -25,7 +24,7 @@ export const parceirosContent = {
       title: 'Secretaria Municipal de Educação (SME) da cidade do Rio',
       logos: [
         {
-          src: assetSrc(logoEducacaoImg),
+          src: logo('logo-sme.png'),
           alt: 'Logo da Secretaria Municipal de Educação do Rio de Janeiro',
         },
       ],
@@ -34,9 +33,9 @@ export const parceirosContent = {
       id: 'cres',
       title: 'CREs — Coordenadorias Regionais de Educação',
       logos: [
-        { src: assetSrc(cre1Img), alt: 'Logo da Coordenadoria Regional de Educação 1' },
-        { src: assetSrc(cre2Img), alt: 'Logo da Coordenadoria Regional de Educação 2' },
-        { src: assetSrc(cre3Img), alt: 'Logo da Coordenadoria Regional de Educação 3' },
+        { src: logo('logo-cre-1.png'), alt: 'Logo da Coordenadoria Regional de Educação 1' },
+        { src: logo('logo-cre-2.png'), alt: 'Logo da Coordenadoria Regional de Educação 2' },
+        { src: logo('logo-cre-3.png'), alt: 'Logo da Coordenadoria Regional de Educação 3' },
       ],
     },
   ] satisfies PartnerGroup[],

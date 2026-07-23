@@ -1,7 +1,4 @@
-'use client'
-
 import { AppLink as Link } from '@/components/shared/AppLink'
-import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import type { ProjetoSection } from '@/features/projeto/data/projetoContent'
 import { cn } from '@/lib/utils'
@@ -38,7 +35,7 @@ export function ProjetoSectionCard({ section }: ProjetoSectionCardProps) {
   const styles = colorStyles[section.color]
 
   return (
-    <motion.div whileHover={{ y: -6 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
+    <div className="h-full transition-transform duration-300 hover:-translate-y-1.5 motion-reduce:transform-none motion-reduce:transition-none">
       <Link
         to={section.href}
         className={cn(
@@ -68,6 +65,6 @@ export function ProjetoSectionCard({ section }: ProjetoSectionCardProps) {
           <ArrowUpRight className="size-4" aria-hidden="true" />
         </span>
       </Link>
-    </motion.div>
+    </div>
   )
 }

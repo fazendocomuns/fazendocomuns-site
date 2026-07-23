@@ -1,7 +1,4 @@
-'use client'
-
 import { AppLink as Link } from '@/components/shared/AppLink'
-import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import type { ProducoesSection } from '@/features/projeto/data/producoesContent'
 import { cn } from '@/lib/utils'
@@ -41,7 +38,7 @@ export function ProducoesSectionCard({ section }: ProducoesSectionCardProps) {
   const styles = colorStyles[section.color]
 
   return (
-    <motion.div whileHover={{ y: -6 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
+    <div className="h-full transition-transform duration-300 hover:-translate-y-1.5 motion-reduce:transform-none motion-reduce:transition-none">
       <Link
         to={section.href}
         className={cn(
@@ -69,6 +66,6 @@ export function ProducoesSectionCard({ section }: ProducoesSectionCardProps) {
           <ArrowUpRight className="size-4" aria-hidden="true" />
         </span>
       </Link>
-    </motion.div>
+    </div>
   )
 }

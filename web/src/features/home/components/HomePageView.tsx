@@ -1,5 +1,3 @@
-'use client'
-
 import { HeroSection } from '@/features/home/components/HeroSection'
 import { MainTitleSection } from '@/features/home/components/MainTitleSection'
 import { BubblesSection } from '@/features/home/components/BubblesSection'

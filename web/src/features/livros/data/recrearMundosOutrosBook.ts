@@ -1,15 +1,16 @@
-import capaLivroImg from '@/assets/imgs/capaLivro.png'
 import type { Livro } from '@/features/livros/types'
-import { assetSrc } from '@/lib/assetSrc'
+import { livroPdfUrls } from '@/features/livros/data/livroPdfUrls'
 
-const pdfUrl =
-  'https://www.fazendocomuns.com.br/_files/ugd/92a7cc_cc2e2e2c9cec4a85b6924959deae39a5.pdf'
+const cover =
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/capas-de-livros/capa-do-livro-fazendo-comuns-na-escola-construir-um-mundo-outro.png'
+
+const pdfUrl = livroPdfUrls.recrearMundosOutros
 
 export const recrearMundosOutrosBook = {
   slug: 'recrear-mundos-outros',
   title: 'Recrear Mundos Outros',
   subtitle: 'Fazendo Comuns na escola… construir um mundo outro',
-  cover: assetSrc(capaLivroImg),
+  cover,
   coverAlt: 'Capa do livro Recrear Mundos Outros — Fazendo Comuns na escola',
   authors: [
     'Lucia Rabello de Castro',
@@ -26,26 +27,15 @@ export const recrearMundosOutrosBook = {
     'Leia online ou faça o download gratuito para conhecer registros teóricos e empíricos sobre infâncias, recreio, escola pública e construção de comuns educativos.',
   ],
   editorialInfo: [
+    { label: 'Formato', value: 'Livro digital (PDF)' },
+    { label: 'Idioma', value: 'Português (Brasil)' },
+    { label: 'Ano', value: '2026' },
+    { label: 'Editora', value: 'Projeto Fazendo Comuns' },
     {
-      label: 'Formato',
-      value: 'Livro digital (PDF)',
+      label: 'Instituição',
+      value: 'Instituto de Psicologia — Universidade Federal do Rio de Janeiro (UFRJ)',
     },
-    {
-      label: 'Idioma',
-      value: 'Português (Brasil)',
-    },
-    {
-      label: 'Ano',
-      value: '2026',
-    },
-    {
-      label: 'Editora / Instituição',
-      value: 'Projeto Fazendo Comuns — UFRJ',
-    },
-    {
-      label: 'Licença de acesso',
-      value: 'Leitura e download gratuitos',
-    },
+    { label: 'Licença de acesso', value: 'Leitura e download gratuitos' },
   ],
   credits: [
     {

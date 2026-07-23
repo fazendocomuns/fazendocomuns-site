@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
@@ -46,11 +47,14 @@ export function NoticiaDetailView({ noticia }: NoticiaDetailViewProps) {
             </div>
 
             <figure className="mt-8 overflow-hidden rounded-2xl border border-border/60 bg-muted shadow-soft">
-              <img
+              <Image
                 src={noticia.heroImage}
                 alt={noticia.listImageAlt}
-                className="w-full object-contain"
-                loading="lazy"
+                width={1200}
+                height={800}
+                sizes="(max-width: 768px) 100vw, 768px"
+                quality={75}
+                className="h-auto w-full object-contain"
               />
             </figure>
           </ScrollReveal>

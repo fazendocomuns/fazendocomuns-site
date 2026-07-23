@@ -1,30 +1,3 @@
-import luciaRabelloImg from '@/assets/imgs/equipe/lucia-rabello.jpg'
-import { assetSrc } from '@/lib/assetSrc'
-import adelaideRezendeImg from '@/assets/imgs/equipe/adelaide-rezende.jpg'
-import anaLeticiaLimaImg from '@/assets/imgs/equipe/ana-leticia-lima.jpg'
-import daviAlvesImg from '@/assets/imgs/equipe/davi-alves.jpg'
-import ericaVieiraImg from '@/assets/imgs/equipe/erica-vieira.jpg'
-import flaviaChrispinoImg from '@/assets/imgs/equipe/flavia-chrispino.jpg'
-import gabrielaCastroImg from '@/assets/imgs/equipe/gabriela-castro.jpg'
-import gieselaTalonImg from '@/assets/imgs/equipe/giesela-talon.jpg'
-import isysBoosImg from '@/assets/imgs/equipe/isys-boos.jpg'
-import juliaJunqueiraImg from '@/assets/imgs/equipe/julia-junqueira-castillo.jpg'
-import juliaMoraesImg from '@/assets/imgs/equipe/julia-moraes.jpg'
-import laraMoreiraImg from '@/assets/imgs/equipe/lara-moreira.jpg'
-import luanGagliardiImg from '@/assets/imgs/equipe/luan-gagliardi.jpg'
-import lucasAbreuImg from '@/assets/imgs/equipe/lucas-abreu.jpg'
-import mariaClaraCaiaffaImg from '@/assets/imgs/equipe/maria-clara-caiaffa.jpg'
-import mariliaCostaImg from '@/assets/imgs/equipe/marilia-costa.jpg'
-import michaelPazImg from '@/assets/imgs/equipe/michael-paz.jpg'
-import paulaTumoloImg from '@/assets/imgs/equipe/paula-tumolo.jpg'
-import pedroQueirozImg from '@/assets/imgs/equipe/pedro-queiroz.jpg'
-import renataTavaresImg from '@/assets/imgs/equipe/renata-tavares.jpg'
-import sofiaManzattoImg from '@/assets/imgs/equipe/sofia-manzatto.jpg'
-import sofiaHengenImg from '@/assets/imgs/equipe/sofia-hengen.jpg'
-import sophiaAguiarImg from '@/assets/imgs/equipe/sophia-aguiar.jpg'
-import victoriaMaiaImg from '@/assets/imgs/equipe/victoria-maia.jpg'
-import viniciusVilaNovaImg from '@/assets/imgs/equipe/vinicius-vila-nova.jpg'
-
 export interface TeamMember {
   id: string
   name: string
@@ -51,7 +24,7 @@ export const equipeContent = {
         {
           id: 'lucia-rabello',
           name: 'Lucia Rabello de Castro',
-          image: assetSrc(luciaRabelloImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/LuciaRabelloDeCastro-Perfil.jpg',
           roles: [],
           bio: 'Professora Titular do Instituto de Psicologia da Universidade Federal do Rio de Janeiro, e do Programa de Pós-graduação em Psicologia desse Instituto. Possui Doutorado (Ph.D., 1988) e Mestrado (M.Sc., 1978) em Psicologia pela Universidade de Londres, Grã-Bretanha. Pesquisadora Senior do CNPQ. Membro Fundador do Núcleo Interdisciplinar de Pesquisa na Infância e Adolescência Contemporâneas - NIPIAC/UFRJ, coordenadora geral desse Núcleo (1995-2011), e atual Coordenadora Científica. Co-fundadora e primeira presidente eleita da Associação Nacional Rede de Pesquisadores e Pesquisadoras da Juventude - REDEJUBRA (2017-2020). É membro de redes nacionais e internacionais na área da infância e juventude. Membro de Conselhos Editoriais de periódicos nacionais e internacionais no campo da infância e juventude, como Childhood, Young e outras. Editora Chefe da Revista Científica da Infância, Adolescência e Juventude - DESIDADES lançada em 2013. Tem sido agraciada como Cientista do Nosso Estado pela Faperj (desde 2002). É Titular da Cátedra Pesquisa, Formação e Intervenção na Infância, Adolescência e Juventude do Colégio Brasileiro de Altos Estudos, UFRJ.',
         },
@@ -64,7 +37,7 @@ export const equipeContent = {
         {
           id: 'adelaide-rezende',
           name: 'Adelaide Rezende de Souza',
-          image: assetSrc(adelaideRezendeImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/AdelaideRezendeDeSouza-Perfil.jpg',
           roles: [
             'Pós-doutoranda em Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
             'Pesquisadora da ONG Redes da Maré',
@@ -73,7 +46,7 @@ export const equipeContent = {
         {
           id: 'ana-leticia-lima',
           name: 'Ana Letícia Lima Silva',
-          image: assetSrc(anaLeticiaLimaImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/AnaLeticiaLimaSilva-Perfil.jpg',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -81,7 +54,7 @@ export const equipeContent = {
         {
           id: 'davi-alves',
           name: 'Davi Alves de Abreu',
-          image: assetSrc(daviAlvesImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/DaviAlvesDeAbreu-Perfil.jpg',
           roles: [
             'Graduando de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -89,7 +62,7 @@ export const equipeContent = {
         {
           id: 'erica-vieira',
           name: 'Érica dos Santos Vieira',
-          image: assetSrc(ericaVieiraImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/EricaDosSantosVieira-Perfil.jpg',
           roles: [
             'Doutoranda em Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -97,7 +70,7 @@ export const equipeContent = {
         {
           id: 'flavia-chrispino',
           name: 'Flávia Chrispino',
-          image: assetSrc(flaviaChrispinoImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/FlaviaChrispino-Perfil.jpg',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -105,7 +78,7 @@ export const equipeContent = {
         {
           id: 'gabriela-castro',
           name: 'Gabriela Fernandes Castro',
-          image: assetSrc(gabrielaCastroImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/GabrielaFernandesCastro-Perfil.jpg',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -113,7 +86,7 @@ export const equipeContent = {
         {
           id: 'giesela-talon',
           name: 'Giesela Maria Schöpke Marques Talon',
-          image: assetSrc(gieselaTalonImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/GieselaMariaSchopkeMarquesTalon-Perfil.png',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -121,7 +94,7 @@ export const equipeContent = {
         {
           id: 'isys-boos',
           name: 'Isys Boos Vieira',
-          image: assetSrc(isysBoosImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/IsysBoosVieira-Perfil.png',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -129,7 +102,7 @@ export const equipeContent = {
         {
           id: 'julia-junqueira',
           name: 'Júlia Junqueira Castillo',
-          image: assetSrc(juliaJunqueiraImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/JuliaJunqueiraCastillo-Perfil.png',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -137,7 +110,7 @@ export const equipeContent = {
         {
           id: 'julia-moraes',
           name: 'Julia Moraes',
-          image: assetSrc(juliaMoraesImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/JuliaMoraes-Perfil.jpg',
           roles: [
             'Psicóloga formada pelo Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -145,7 +118,7 @@ export const equipeContent = {
         {
           id: 'lara-moreira',
           name: 'Lara de Oliveira Moreira',
-          image: assetSrc(laraMoreiraImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/LaraDeOliveiraMoreira-Perfil.jpg',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -153,7 +126,7 @@ export const equipeContent = {
         {
           id: 'luan-gagliardi',
           name: 'Luan Gall Gagliardi',
-          image: assetSrc(luanGagliardiImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/LuanGallGagliardi-Perfil.png',
           roles: [
             'Graduando de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -161,7 +134,7 @@ export const equipeContent = {
         {
           id: 'lucas-abreu',
           name: 'Lucas Araujo de Jesus Meireles de Abreu',
-          image: assetSrc(lucasAbreuImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/LucasAraujoDeJesusMeirelesDeAbreu-Perfil.png',
           roles: [
             'Graduando de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -169,7 +142,7 @@ export const equipeContent = {
         {
           id: 'maria-clara-caiaffa',
           name: 'Maria Clara de Lima Caiaffa dos Santos',
-          image: assetSrc(mariaClaraCaiaffaImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/MariaClaraDeLimaCaiaffaDosSantos-Perfil.jpg',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -177,7 +150,7 @@ export const equipeContent = {
         {
           id: 'marilia-costa',
           name: 'Marília Fernanda Garcia Costa',
-          image: assetSrc(mariliaCostaImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/MariliaFernandaGarciaCosta-Perfil.png',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -185,7 +158,7 @@ export const equipeContent = {
         {
           id: 'michael-paz',
           name: 'Michael Santana da Paz',
-          image: assetSrc(michaelPazImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/MichaelSantanaDaPaz-Perfil.png',
           roles: [
             'Graduando de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -193,7 +166,7 @@ export const equipeContent = {
         {
           id: 'paula-tumolo',
           name: 'Paula Pimentel Tumolo',
-          image: assetSrc(paulaTumoloImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/PaulaPimentelTumolo-Perfil.png',
           roles: [
             'Doutoranda em Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
             'Professora Substituta da Faculdade de Educação da Universidade Federal do Rio de Janeiro (UFRJ)',
@@ -202,7 +175,7 @@ export const equipeContent = {
         {
           id: 'pedro-queiroz',
           name: 'Pedro Sá Campello Queiroz',
-          image: assetSrc(pedroQueirozImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/PedroSaCampelloQueiroz-Perfil.png',
           roles: [
             'Graduando de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -210,7 +183,7 @@ export const equipeContent = {
         {
           id: 'renata-tavares',
           name: 'Renata Tavares',
-          image: assetSrc(renataTavaresImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/RenataTavares-Perfil.png',
           roles: [
             'Doutoranda em Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -218,7 +191,7 @@ export const equipeContent = {
         {
           id: 'sofia-manzatto',
           name: 'Sofia Mitie Kanashiro Manzatto',
-          image: assetSrc(sofiaManzattoImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/SofiaMitieKanashiroManzatto-Perfil.png',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -226,7 +199,7 @@ export const equipeContent = {
         {
           id: 'sofia-hengen',
           name: 'Sofía Hengen',
-          image: assetSrc(sofiaHengenImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/SofiaHengen-Perfil.png',
           roles: [
             'Doutoranda em Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -234,7 +207,7 @@ export const equipeContent = {
         {
           id: 'sophia-aguiar',
           name: 'Sophia Aguiar Gimenez Corrêa',
-          image: assetSrc(sophiaAguiarImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/SophiaAguiarGimenezCorrea-Perfil.png',
           roles: [
             'Graduanda de Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -242,7 +215,7 @@ export const equipeContent = {
         {
           id: 'victoria-maia',
           name: 'Victoria Bersan Barbalho Maia',
-          image: assetSrc(victoriaMaiaImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/VictoriaBersanBarbalhoMaia-Perfil.png',
           roles: [
             'Mestranda em Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
           ],
@@ -250,7 +223,7 @@ export const equipeContent = {
         {
           id: 'vinicius-vila-nova',
           name: 'Vinícius Vila Nova',
-          image: assetSrc(viniciusVilaNovaImg),
+          image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/equipe/Vinicius-Perfil.png',
           roles: [
             'Bolsista de Apoio à Pesquisa',
             'Graduando de Engenharia de Computação pela Universidade Veiga de Almeida (UVA)',

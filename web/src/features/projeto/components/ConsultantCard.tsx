@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { LattesIcon, LinkedInIcon } from '@/components/shared/AcademicSocialIcons'
 import type { Consultant } from '@/features/projeto/data/consultoresContent'
 import { cn } from '@/lib/utils'
@@ -25,7 +26,7 @@ function SocialLink({
       aria-label={label}
       title={label}
       className={cn(
-        'inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-muted text-foreground',
+        'group inline-flex size-10 items-center justify-center rounded-full border border-border/60 bg-muted text-foreground',
         'transition-colors hover:border-brand-red hover:bg-brand-red hover:text-white',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-red',
       )}
@@ -51,12 +52,13 @@ export function ConsultantCard({ consultant }: ConsultantCardProps) {
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-medium">
       <div className="relative aspect-[4/5] overflow-hidden bg-muted">
-        <img
+        <Image
           src={consultant.image}
           alt={consultant.name}
-          loading="lazy"
-          decoding="async"
-          className="h-full w-full object-cover object-top"
+          fill
+          sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+          quality={60}
+          className="object-cover object-top"
         />
       </div>
 

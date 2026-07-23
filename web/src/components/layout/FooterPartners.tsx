@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { footerContent, type FooterPartnerLogo } from '@/features/home/data/footerContent'
 import { cn } from '@/lib/utils'
 
@@ -18,12 +19,16 @@ function PartnerLogoCell({
         className ?? partner.cellClassName,
       )}
     >
-      <img
-        src={partner.logo}
-        alt={partner.alt}
-        loading="lazy"
-        className="max-h-full max-w-full object-contain"
-      />
+      <span className="relative block size-full">
+        <Image
+          src={partner.logo}
+          alt={partner.alt}
+          fill
+          sizes="(max-width: 639px) 128px, 160px"
+          quality={60}
+          className="object-contain"
+        />
+      </span>
     </div>
   )
 }
@@ -44,7 +49,7 @@ export function FooterPartners() {
               <PartnerLogoCell
                 key={partner.alt}
                 partner={partner}
-                className="h-24 w-24 sm:h-28 sm:w-28"
+                className="h-32 w-32 sm:h-36 sm:w-36 md:h-40 md:w-40"
               />
             ))}
           </div>
@@ -52,7 +57,7 @@ export function FooterPartners() {
 
         <div>
           <h3 className={headingClass}>Apoio</h3>
-          <div className="mt-5 grid grid-cols-3 gap-3 sm:gap-4">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
             {support.map((partner) => (
               <PartnerLogoCell key={partner.alt} partner={partner} />
             ))}

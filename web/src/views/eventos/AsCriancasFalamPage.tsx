@@ -1,11 +1,11 @@
-'use client'
-
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ArrowLeft, Calendar, Camera, MapPin } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 import { Button } from '@/components/ui/button'
+import { EventFlyerGallery } from '@/features/eventos/components/EventFlyerGallery'
 import { EventPanelSection } from '@/features/eventos/components/EventPanelSection'
+import { EventPhotoPreview } from '@/features/eventos/components/EventPhotoPreview'
 import { asCriancasFalamEvent as asCriancasFalamFallback } from '@/features/eventos/data/asCriancasFalamContent'
 import { proseParagraph } from '@/lib/typography'
 
@@ -14,7 +14,8 @@ interface AsCriancasFalamPageProps {
 }
 
 export function AsCriancasFalamPage({ content }: AsCriancasFalamPageProps) {
-  const { title, subtitle, image, imageAlt, date, location, intro, panels } = content
+  const { title, subtitle, posters, date, location, intro, panels, photos } =
+    content
 
   return (
     <>
@@ -32,23 +33,12 @@ export function AsCriancasFalamPage({ content }: AsCriancasFalamPageProps) {
         <div className="container-app mx-auto max-w-6xl">
           <ScrollReveal>
             <article className="grid gap-10 lg:grid-cols-[minmax(220px,320px)_1fr] lg:items-start lg:gap-12">
-              <figure className="mx-auto w-full max-w-xs overflow-hidden rounded-2xl border border-border/60 bg-card shadow-medium lg:mx-0 lg:max-w-none">
-                <img
-                  src={image}
-                  alt={imageAlt}
-                  className="w-full object-contain"
-                  loading="eager"
-                  decoding="async"
-                />
-              </figure>
+              <EventFlyerGallery posters={posters} title={title} />
 
               <div className="min-w-0">
                 <div className="space-y-5">
                   {intro.map((paragraph) => (
-                    <p
-                      key={paragraph}
-                      className={proseParagraph}
-                    >
+                    <p key={paragraph} className={proseParagraph}>
                       {paragraph}
                     </p>
                   ))}
@@ -95,9 +85,9 @@ export function AsCriancasFalamPage({ content }: AsCriancasFalamPageProps) {
       </section>
 
       <section className="section-padding bg-background" aria-label="Registro fotográfico">
-        <div className="container-app">
+        <div className="container-app mx-auto max-w-6xl">
           <ScrollReveal>
-            <div className="flex flex-col items-start justify-between gap-6 rounded-2xl border border-border/60 bg-card p-6 shadow-soft md:flex-row md:items-center md:p-8">
+            <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
               <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-amber/15 text-brand-orange">
                   <Camera className="size-6" aria-hidden="true" />
@@ -114,10 +104,12 @@ export function AsCriancasFalamPage({ content }: AsCriancasFalamPageProps) {
               </div>
 
               <Button asChild>
-                <Link href="/eventos/as-criancas-falam/fotos">Ver fotos</Link>
+                <Link href="/eventos/as-criancas-falam/fotos">Ver todas as fotos</Link>
               </Button>
             </div>
           </ScrollReveal>
+
+          <EventPhotoPreview photos={photos} title={title} />
 
           <div className="mt-10 border-t border-border pt-8">
             <Button variant="outline" asChild>
@@ -129,6 +121,7 @@ export function AsCriancasFalamPage({ content }: AsCriancasFalamPageProps) {
           </div>
         </div>
       </section>
+
     </>
   )
 }

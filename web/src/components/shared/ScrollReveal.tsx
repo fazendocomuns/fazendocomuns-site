@@ -1,7 +1,4 @@
-'use client'
-
-import { motion, useReducedMotion, type Variants } from 'framer-motion'
-import { fadeInUp } from '@/animations/motionVariants'
+import type { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 
 interface ScrollRevealProps {
@@ -26,32 +23,21 @@ export function ScrollReveal({
   direction = 'up',
   once = true,
 }: ScrollRevealProps) {
-  const shouldReduceMotion = useReducedMotion()
   const offset = directionMap[direction]
 
-  const variants: Variants = shouldReduceMotion
-    ? { hidden: { opacity: 1 }, visible: { opacity: 1 } }
-    : {
-        hidden: { opacity: 0, ...offset },
-        visible: {
-          ...fadeInUp.visible,
-          transition: {
-            duration: 0.7,
-            delay,
-            ease: [0.22, 1, 0.36, 1],
-          },
-        },
-      }
-
   return (
-    <motion.div
-      className={cn(className)}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once, margin: '-80px' }}
-      variants={variants}
+    <div
+      className={cn('scroll-reveal', className)}
+      data-reveal-once={once}
+      style={
+        {
+          '--reveal-x': `${offset.x}px`,
+          '--reveal-y': `${offset.y}px`,
+          '--reveal-delay': `${delay}s`,
+        } as CSSProperties
+      }
     >
       {children}
-    </motion.div>
+    </div>
   )
 }

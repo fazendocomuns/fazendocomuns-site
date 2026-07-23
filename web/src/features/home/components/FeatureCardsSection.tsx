@@ -1,8 +1,5 @@
-'use client'
-
 import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
-import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
@@ -28,10 +25,8 @@ export function FeatureCardsSection() {
         <div className="grid gap-8 md:grid-cols-3">
           {featureCards.map((card, index) => (
             <ScrollReveal key={card.id} delay={index * 0.1}>
-              <motion.article
-                whileHover={{ y: -6 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft"
+              <article
+                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft transition-transform duration-300 hover:-translate-y-1.5 motion-reduce:transform-none motion-reduce:transition-none"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <Image
@@ -39,7 +34,8 @@ export function FeatureCardsSection() {
                     alt={card.imageAlt}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    quality={60}
+                    className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
                   />
                 </div>
 
@@ -83,7 +79,7 @@ export function FeatureCardsSection() {
                     </div>
                   ) : null}
                 </div>
-              </motion.article>
+              </article>
             </ScrollReveal>
           ))}
         </div>

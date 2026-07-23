@@ -1,12 +1,3 @@
-import andreaSzulcImg from '@/assets/imgs/consultores/andrea-szulc.jpg'
-import { assetSrc } from '@/lib/assetSrc'
-import placeholderImg from '@/assets/imgs/consultores/icone-placeholder.png'
-import lucianaGageiroImg from '@/assets/imgs/consultores/luciana-gageiro.jpg'
-import conceicaoSeixasImg from '@/assets/imgs/consultores/conceicao-seixas.jpg'
-import heloisaBezerraImg from '@/assets/imgs/consultores/heloisa-bezerra.jpg'
-import julianaLaraImg from '@/assets/imgs/consultores/juliana-lara.jpg'
-import valeriaLlobetImg from '@/assets/imgs/consultores/valeria-llobet.jpg'
-
 export interface Consultant {
   id: string
   name: string
@@ -26,7 +17,7 @@ export const consultoresContent = {
     {
       id: 'andrea-szulc',
       name: 'Andrea Szulc',
-      image: assetSrc(andreaSzulcImg),
+      image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/consultores/AndreaSzulc-Perfil.jpg',
       roles: [
         'Doutora em Antropologia pela Universidade de Buenos Aires',
         'Pesquisadora do CONICET/Argentina',
@@ -38,7 +29,7 @@ export const consultoresContent = {
     {
       id: 'felipe-grisolia',
       name: 'Felipe Salvador Grisolia',
-      image: assetSrc(placeholderImg),
+      image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/foto-generica.png',
       roles: [
         'Doutor em Psicologia pela Universidade Federal do Rio de Janeiro',
         'Professor Substituto da Universidade do Estado do Rio de Janeiro',
@@ -49,7 +40,7 @@ export const consultoresContent = {
     {
       id: 'idilva-germano',
       name: 'Idilva Maria Pires Germano',
-      image: assetSrc(placeholderImg),
+      image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/foto-generica.png',
       roles: [
         'Doutora em Sociologia pela Universidade Federal do Ceará',
         'Professora Titular da Universidade Federal do Ceará',
@@ -60,40 +51,40 @@ export const consultoresContent = {
     {
       id: 'luciana-gageiro',
       name: 'Luciana Gageiro Coutinho',
-      image: assetSrc(lucianaGageiroImg),
+      image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/consultores/LucianaGageiroCoutinho-Perfil.jpg',
       roles: [
         'Doutora em Psicologia (PUC-Rio)',
         'Professora Associada da Faculdade de Educação da UFF/ PPG em Psicologia da UFF',
       ],
       linkedin: '',
-      lattes: 'http://lattes.cnpq.br/2308234336807405',
+      lattes: '',
     },
     {
       id: 'conceicao-seixas',
       name: 'Conceição Firmina Seixas Silva',
-      image: assetSrc(conceicaoSeixasImg),
+      image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/consultores/ConceicaoFirminaSeixasSilva-Perfil.png',
       roles: [
         'Professora Associada da Faculdade de Educação da Universidade do Estado do Rio de Janeiro (UERJ)/ Departamento de Estudos da Infância (DEDI)',
         'Professora permanente do Programa de Pós-Graduação em Educação (ProEd/ UERJ)',
         'Líder do grupo Espaço de Estudo e Pesquisa sobre Infância (EEPI)',
       ],
       linkedin: '',
-      lattes: 'http://lattes.cnpq.br/9511209669396293',
+      lattes: '',
     },
     {
       id: 'heloisa-bezerra',
       name: 'Heloisa Dias Bezerra',
-      image: assetSrc(heloisaBezerraImg),
+      image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/consultores/HeloisaDiasBezerra-Perfil.jpg',
       roles: [
         'Professora Titular na Faculdade de Ciências Sociais da Universidade Federal do Estado do Rio de Janeiro (Unirio)',
       ],
       linkedin: '',
-      lattes: 'http://lattes.cnpq.br/5901954357328179',
+      lattes: '',
     },
     {
       id: 'juliana-lara',
       name: 'Juliana Siqueira de Lara',
-      image: assetSrc(julianaLaraImg),
+      image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/consultores/JulianaSiqueiraDeLara-Perfil.jpg',
       roles: [
         'Pós-doutoranda em Psicologia no Instituto de Psicologia da Universidade Federal do Rio de Janeiro (UFRJ)',
         'Professora substituta da Faculdade de Educação da Universidade Federal do Rio de Janeiro (UFRJ)',
@@ -104,7 +95,7 @@ export const consultoresContent = {
     {
       id: 'valeria-llobet',
       name: 'Valeria Llobet',
-      image: assetSrc(valeriaLlobetImg),
+      image: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/equipes/consultores/ValeriaLlobet-Perfil.jpg',
       roles: [
         'Diretora do Centro de Estudos sobre Desigualdades, Sujeitos e Instituições (CEDESI) da Escola de Humanidades da Universidad Nacional de San Martín (UNSAM)',
         'Professora Associada da Universidad Nacional de San Martín (UNSAM)',

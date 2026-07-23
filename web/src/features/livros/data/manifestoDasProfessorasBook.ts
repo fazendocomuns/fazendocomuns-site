@@ -21,27 +21,27 @@ export const manifestoDasProfessorasBook = {
     'Leia online ou faça o download gratuito para conhecer o manifesto produzido no âmbito da pesquisa “Fazendo Comuns: a educação como projeto intra e co-geracional”.',
   ],
   editorialInfo: [
-    {
-      label: 'Formato',
-      value: 'Publicação digital (PDF)',
-    },
-    {
-      label: 'Idioma',
-      value: 'Português (Brasil)',
-    },
+    { label: 'Formato', value: 'Publicação digital (PDF)' },
+    { label: 'Idioma', value: 'Português (Brasil)' },
+    { label: 'Ano', value: '2025' },
+    { label: 'Editora', value: 'Projeto Fazendo Comuns' },
     {
       label: 'Instituição',
-      value: 'Projeto Fazendo Comuns — UFRJ',
+      value: 'Instituto de Psicologia — Universidade Federal do Rio de Janeiro (UFRJ)',
     },
-    {
-      label: 'Licença de acesso',
-      value: 'Leitura e download gratuitos',
-    },
+    { label: 'Licença de acesso', value: 'Leitura e download gratuitos' },
   ],
   credits: [
     {
-      label: 'Projeto',
-      names: ['Fazendo Comuns — UFRJ'],
+      label: 'Coordenação científica',
+      names: ['Lucia Rabello de Castro'],
+    },
+    {
+      label: 'Pesquisa e produção',
+      names: [
+        'Professoras do Projeto Fazendo Comuns',
+        'Equipe do Projeto Fazendo Comuns / UFRJ',
+      ],
     },
     {
       label: 'Instituição responsável',
@@ -53,6 +53,7 @@ export const manifestoDasProfessorasBook = {
   readUrl: downloadUrl,
   downloadUrl,
   downloadLabel: 'Baixar PDF',
+  datePublished: '2025',
   publisher: 'Projeto Fazendo Comuns — UFRJ',
   seo: {
     title: 'Manifesto das professoras | Publicação',

@@ -1,8 +1,7 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
-import { motion } from 'framer-motion'
 import { ArrowRight, BookOpen } from 'lucide-react'
+import { ScrollReveal } from '@/components/shared/ScrollReveal'
 import { Badge } from '@/components/ui/badge'
 import type { Livro } from '@/features/livros/types'
 
@@ -15,26 +14,22 @@ export function LivroCard({ livro, index }: LivroCardProps) {
   const excerpt = livro.summary[0] ?? livro.seo.description
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-60px' }}
-      transition={{ duration: 0.5, delay: index * 0.08 }}
-      className="group overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-medium"
-    >
-      <div className="flex min-w-0 flex-col sm:flex-row sm:items-stretch">
+    <ScrollReveal delay={Math.min(index * 0.08, 0.4)}>
+      <article className="group overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-medium motion-reduce:transform-none">
+        <div className="flex min-w-0 flex-col sm:flex-row sm:items-stretch">
         <Link
           href={`/livros/${livro.slug}`}
-          className="relative mx-auto w-full max-w-[220px] shrink-0 overflow-hidden bg-muted sm:mx-0 sm:max-w-none sm:w-44 md:w-52"
+          className="relative mx-auto aspect-[501/735] w-full max-w-[220px] shrink-0 overflow-hidden bg-muted sm:mx-0 sm:aspect-auto sm:min-h-[16rem] sm:w-44 sm:max-w-none md:w-52"
           tabIndex={-1}
           aria-hidden="true"
         >
-          <img
+          <Image
             src={livro.cover}
             alt=""
-            loading="lazy"
-            decoding="async"
-            className="aspect-[501/735] w-full object-cover transition-transform duration-500 group-hover:scale-105 sm:aspect-auto sm:h-full sm:min-h-[16rem]"
+            fill
+            sizes="(max-width: 639px) 220px, (max-width: 767px) 176px, 208px"
+            quality={60}
+            className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
           />
         </Link>
 
@@ -77,7 +72,8 @@ export function LivroCard({ livro, index }: LivroCardProps) {
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         </div>
-      </div>
-    </motion.article>
+        </div>
+      </article>
+    </ScrollReveal>
   )
 }

@@ -192,12 +192,37 @@ function MockAdminAuthProvider({ children }: { children: ReactNode }) {
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>
 }
 
+function UnavailableAdminAuthProvider({ children }: { children: ReactNode }) {
+  const value = useMemo<AdminAuthContextValue>(
+    () => ({
+      isLoading: false,
+      isAuthenticated: false,
+      user: null,
+      usesSupabase: false,
+      login: async () => {
+        throw new Error('Painel indisponível: autenticação não configurada.')
+      },
+      logout: async () => undefined,
+      requestPasswordReset: async () => {
+        throw new Error('Painel indisponível: autenticação não configurada.')
+      },
+    }),
+    [],
+  )
+
+  return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>
+}
+
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   if (isSupabaseConfigured()) {
     return <SupabaseAdminAuthProvider>{children}</SupabaseAdminAuthProvider>
   }
 
-  return <MockAdminAuthProvider>{children}</MockAdminAuthProvider>
+  if (process.env.NODE_ENV === 'development') {
+    return <MockAdminAuthProvider>{children}</MockAdminAuthProvider>
+  }
+
+  return <UnavailableAdminAuthProvider>{children}</UnavailableAdminAuthProvider>
 }
 
 export function useAuth() {

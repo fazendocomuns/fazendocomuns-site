@@ -6,8 +6,28 @@ import type { Database } from '@/types/database'
 type MidiaRow = Database['public']['Tables']['midia']['Row']
 
 /** Buckets da biblioteca de mídia (por tipo de arquivo). */
-const LIBRARY_BUCKETS = ['fotos', 'podcast', 'livros', 'documentos'] as const
-type LibraryBucket = (typeof LIBRARY_BUCKETS)[number]
+export const LIBRARY_BUCKETS = [
+  'biblioteca-de-imagens',
+  'podcast',
+  'livros',
+  'documentos',
+] as const
+export type LibraryBucket = (typeof LIBRARY_BUCKETS)[number]
+
+export const LIBRARY_BUCKET_OPTIONS: Array<{
+  value: LibraryBucket
+  label: string
+  hint: string
+}> = [
+  {
+    value: 'biblioteca-de-imagens',
+    label: 'Biblioteca de imagens',
+    hint: 'Imagens e vídeos',
+  },
+  { value: 'podcast', label: 'Podcast', hint: 'Áudio' },
+  { value: 'livros', label: 'Livros / PDF', hint: 'PDFs e e-books' },
+  { value: 'documentos', label: 'Documentos', hint: 'Outros arquivos de texto' },
+]
 
 /** Marcador visível de pasta vazia (image/png). */
 const FOLDER_KEEP = '_keep.png'
@@ -185,6 +205,16 @@ export function normalizeFolder(input: string): string {
     .join('/')
 }
 
+/** Se o 1º segmento da pasta for um bucket reservado, usa esse bucket. */
+export function inferBucketFromFolderPath(folderPath: string): LibraryBucket | null {
+  const root = normalizeFolder(folderPath).split('/')[0]
+  if (!root) return null
+  if ((LIBRARY_BUCKETS as readonly string[]).includes(root)) {
+    return root as LibraryBucket
+  }
+  return null
+}
+
 function isFolderKeep(name: string): boolean {
   return name === FOLDER_KEEP || name === LEGACY_FOLDER_KEEP
 }
@@ -209,7 +239,7 @@ function bucketForMime(mime: string): LibraryBucket {
   }
   if (mime.startsWith('text/')) return 'documentos'
   // Imagens e vídeos
-  return 'fotos'
+  return 'biblioteca-de-imagens'
 }
 
 function sanitizeBaseName(fileName: string): string {
@@ -443,32 +473,47 @@ async function ensureFolderInBucket(bucket: LibraryBucket, folder: string) {
   }
 }
 
-export async function createMidiaFolder(folderInput: string) {
+/**
+ * Cria pasta vazia em um único bucket (não replica em fotos/podcast/etc.).
+ * PDFs → bucket `livros`; imagens → `fotos`; áudio → `podcast`.
+ */
+export async function createMidiaFolder(
+  folderInput: string,
+  bucketInput: LibraryBucket = 'biblioteca-de-imagens',
+) {
   const folder = normalizeFolder(folderInput)
   if (!folder) throw new Error('Informe um nome de pasta válido.')
 
-  // Cria a pasta em todos os buckets da biblioteca (fotos, podcast, livros, documentos)
-  const results = await Promise.allSettled(
-    LIBRARY_BUCKETS.map((bucket) => ensureFolderInBucket(bucket, folder)),
-  )
-
-  const errors = results
-    .map((result, index) => {
-      if (result.status === 'fulfilled') return null
-      const message =
-        result.reason instanceof Error ? result.reason.message : String(result.reason)
-      return `${LIBRARY_BUCKETS[index]}: ${message}`
-    })
-    .filter(Boolean) as string[]
-
-  if (errors.length === LIBRARY_BUCKETS.length) {
-    throw new Error(errors.join('\n'))
+  const inferred = inferBucketFromFolderPath(folder)
+  const bucket = inferred ?? bucketInput
+  if (!(LIBRARY_BUCKETS as readonly string[]).includes(bucket)) {
+    throw new Error('Tipo de pasta inválido.')
   }
 
+  await ensureFolderInBucket(bucket, folder)
   return folder
 }
 
+/** Remove marcadores de pasta duplicados em buckets errados (ex.: livros/_keep só em fotos). */
+export async function cleanupFolderMarkersOutsideBucket(
+  folderInput: string,
+  keepBucket: LibraryBucket,
+) {
+  const folder = normalizeFolder(folderInput)
+  if (!folder) return
+
+  const path = `${folder}/${FOLDER_KEEP}`
+  const legacyPath = `${folder}/${LEGACY_FOLDER_KEEP}`
+
+  await Promise.all(
+    LIBRARY_BUCKETS.filter((bucket) => bucket !== keepBucket).map(async (bucket) => {
+      await supabase.storage.from(bucket).remove([path, legacyPath])
+    }),
+  )
+}
+
 const MEDIA_BUCKETS = [
+  'biblioteca-de-imagens',
   'fotos',
   'podcast',
   'documentos',
@@ -753,7 +798,7 @@ export async function moveMidiaAsset(id: string, targetFolderInput = '') {
   if (targetFolder) {
     const bucket = LIBRARY_BUCKETS.includes(row.bucket as LibraryBucket)
       ? (row.bucket as LibraryBucket)
-      : 'fotos'
+      : 'biblioteca-de-imagens'
     await ensureFolderInBucket(bucket, targetFolder).catch(() => undefined)
   }
 

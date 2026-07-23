@@ -1,5 +1,4 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ArrowLeft } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
@@ -31,11 +30,14 @@ export function CartazesHistoriasPage({ content }: CartazesHistoriasPageProps) {
             {cartazes.images.map((image, index) => (
               <ScrollReveal key={image.url} delay={index * 0.06}>
                 <figure className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft">
-                  <img
+                  <Image
                     src={image.url}
                     alt={image.alt}
-                    loading="lazy"
-                    className="w-full object-contain"
+                    width={1000}
+                    height={1770}
+                    sizes="(max-width: 639px) 100vw, 50vw"
+                    quality={75}
+                    className="h-auto w-full object-contain"
                   />
                 </figure>
               </ScrollReveal>

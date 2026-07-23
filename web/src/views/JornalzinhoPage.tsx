@@ -1,5 +1,4 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ArrowLeft } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
@@ -53,12 +52,14 @@ export function JornalzinhoPage({ content }: JornalzinhoPageProps) {
           <ScrollReveal>
             <article className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
               <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-border/60 bg-card shadow-medium lg:max-w-none">
-                <img
+                <Image
                   src={relatedPublication.cover}
                   alt={relatedPublication.coverAlt}
-                  className="w-full object-contain"
-                  loading="lazy"
-                  decoding="async"
+                  width={501}
+                  height={735}
+                  sizes="(max-width: 1023px) 384px, 50vw"
+                  quality={60}
+                  className="h-auto w-full object-contain"
                 />
               </div>
 

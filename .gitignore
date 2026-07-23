@@ -7,6 +7,8 @@ supabase/.temp/
 # Dependências e builds (fallback se paths subirem na raiz)
 node_modules/
 .next/
+.next-audit-*/
+**/.next-audit-*/
 out/
 dist/
 coverage/

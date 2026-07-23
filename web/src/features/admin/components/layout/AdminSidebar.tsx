@@ -101,8 +101,10 @@ export function AdminSidebar({ mobile, onNavigate }: AdminSidebarProps) {
       >
         <div
           className={cn(
-            'flex h-16 shrink-0 items-center border-b border-border/50 px-3',
-            isCollapsed ? 'justify-center' : 'justify-between px-4',
+            'flex shrink-0 items-center border-b border-border/50',
+            isCollapsed
+              ? 'flex-col gap-3 px-2 py-4'
+              : 'justify-between gap-3 px-4 py-3.5',
           )}
         >
           {isCollapsed ? (
@@ -120,14 +122,13 @@ export function AdminSidebar({ mobile, onNavigate }: AdminSidebarProps) {
               <TooltipContent side="right">Dashboard</TooltipContent>
             </Tooltip>
           ) : (
-            <Link to="/admin" className="flex items-center gap-2.5" onClick={onNavigate}>
-              <Logo className="h-8" linkToHome={false} />
-              <div className="flex flex-col">
-                <span className="font-ui text-xs font-bold uppercase tracking-wider text-foreground">
-                  Admin
-                </span>
-                <span className="font-ui text-[10px] text-muted-foreground">Fazendo Comuns</span>
-              </div>
+            <Link
+              to="/admin"
+              className="flex items-center"
+              onClick={onNavigate}
+              aria-label="Dashboard"
+            >
+              <Logo size="sm" className="h-8 w-auto shrink-0" linkToHome={false} />
             </Link>
           )}
 
@@ -137,7 +138,7 @@ export function AdminSidebar({ mobile, onNavigate }: AdminSidebarProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 shrink-0"
+                  className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
                   onClick={toggleCollapsed}
                   aria-label={isCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}
                 >
@@ -178,7 +179,15 @@ export function AdminSidebar({ mobile, onNavigate }: AdminSidebarProps) {
           })}
         </nav>
 
-        <div className="shrink-0 border-t border-border/50 p-3">
+        <div className="shrink-0 space-y-2 border-t border-border/50 p-3">
+          {!isCollapsed && (
+            <div className="px-3 py-1">
+              <p className="font-ui text-xs font-bold uppercase tracking-wider text-foreground">
+                Admin
+              </p>
+              <p className="font-ui text-[10px] text-muted-foreground">Fazendo Comuns</p>
+            </div>
+          )}
           {isCollapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>

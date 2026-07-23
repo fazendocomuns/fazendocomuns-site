@@ -87,6 +87,15 @@ export function videoFormToUpdate(values: VideoFormValues) {
 
 export function mapLivroAdmin(row: LivroRow): AdminLivro {
   const seo = (row.seo ?? {}) as { title?: string; description?: string }
+  const editorialInfo =
+    (row.editorial_info as { label?: string; value?: string }[] | null) ?? []
+  const credits =
+    (row.credits as { label?: string; names?: string[] }[] | null) ?? []
+  const relatedLinks =
+    (row.related_links as
+      | { label?: string; href?: string; description?: string }[]
+      | null) ?? []
+
   return {
     id: row.id,
     slug: row.slug,
@@ -97,6 +106,19 @@ export function mapLivroAdmin(row: LivroRow): AdminLivro {
     authors: row.authors ?? [],
     organizers: row.organizers ?? [],
     summary: (row.summary as string[]) ?? [],
+    editorialInfo: editorialInfo
+      .filter((item) => item.label && item.value)
+      .map((item) => ({ label: item.label!, value: item.value! })),
+    credits: credits
+      .filter((item) => item.label && item.names?.length)
+      .map((item) => ({ label: item.label!, names: item.names! })),
+    relatedLinks: relatedLinks
+      .filter((item) => item.label && item.href)
+      .map((item) => ({
+        label: item.label!,
+        href: item.href!,
+        description: item.description ?? '',
+      })),
     readUrl: row.read_url,
     downloadUrl: row.download_url,
     downloadLabel: row.download_label ?? '',
@@ -112,6 +134,34 @@ export function mapLivroAdmin(row: LivroRow): AdminLivro {
   }
 }
 
+function mapEditorialInfo(values: LivroFormValues['editorialInfo']) {
+  return values
+    .map((item) => ({
+      label: item.label.trim(),
+      value: item.value.trim(),
+    }))
+    .filter((item) => item.label && item.value)
+}
+
+function mapCredits(values: LivroFormValues['credits']) {
+  return values
+    .map((item) => ({
+      label: item.label.trim(),
+      names: splitCsv(item.names),
+    }))
+    .filter((item) => item.label && item.names.length > 0)
+}
+
+function mapRelatedLinks(values: LivroFormValues['relatedLinks']) {
+  return values
+    .map((item) => ({
+      label: item.label.trim(),
+      href: item.href.trim(),
+      description: item.description.trim() || undefined,
+    }))
+    .filter((item) => item.label && item.href)
+}
+
 export function livroFormToInsert(values: LivroFormValues, slug: string) {
   return {
     slug,
@@ -122,8 +172,8 @@ export function livroFormToInsert(values: LivroFormValues, slug: string) {
     authors: splitCsv(values.authors),
     organizers: splitCsv(values.organizers),
     summary: splitLines(values.summary),
-    editorial_info: [],
-    credits: [],
+    editorial_info: mapEditorialInfo(values.editorialInfo),
+    credits: mapCredits(values.credits),
     read_url: values.readUrl,
     download_url: values.downloadUrl,
     download_label: values.downloadLabel || null,
@@ -131,7 +181,7 @@ export function livroFormToInsert(values: LivroFormValues, slug: string) {
     publisher: values.publisher,
     category_label: values.categoryLabel || null,
     seo: { title: values.seoTitle, description: values.seoDescription },
-    related_links: [],
+    related_links: mapRelatedLinks(values.relatedLinks),
     display_order: values.displayOrder,
     status: values.status,
   }
@@ -146,6 +196,9 @@ export function livroFormToUpdate(values: LivroFormValues) {
     authors: splitCsv(values.authors),
     organizers: splitCsv(values.organizers),
     summary: splitLines(values.summary),
+    editorial_info: mapEditorialInfo(values.editorialInfo),
+    credits: mapCredits(values.credits),
+    related_links: mapRelatedLinks(values.relatedLinks),
     read_url: values.readUrl,
     download_url: values.downloadUrl,
     download_label: values.downloadLabel || null,

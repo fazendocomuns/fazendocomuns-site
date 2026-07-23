@@ -1,10 +1,10 @@
 import type { LucideIcon } from 'lucide-react'
 import { Camera, Mic, Play } from 'lucide-react'
 
-import fotosPreview from '@/assets/imgs/asCriancasFalam.jpg'
-import videosPreview from '@/assets/imgs/vídeoVamosFalar.jpeg'
-import podcastPreview from '@/assets/imgs/debate.png'
-import { assetSrc } from '@/lib/assetSrc'
+const supabaseStorage =
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens'
+
+const img = (path: string) => `${supabaseStorage}/${path}`
 
 export interface MultimidiaSection {
   id: string
@@ -32,7 +32,7 @@ export const multimidiaSections: MultimidiaSection[] = [
       'Registros fotográficos de pesquisas de campo, eventos e atividades nas escolas públicas.',
     icon: Camera,
     color: 'amber',
-    image: assetSrc(fotosPreview),
+    image: img('pagina-home/as-criancas-falam.jpg'),
     imageAlt: 'Fotos do projeto Fazendo Comuns',
   },
   {
@@ -43,7 +43,7 @@ export const multimidiaSections: MultimidiaSection[] = [
       'Vídeos, debates e produções audiovisuais sobre o recreio e a vida escolar.',
     icon: Play,
     color: 'red',
-    image: assetSrc(videosPreview),
+    image: img('pagina-home/Video-Vamos-falar-do-recreio.jpg'),
     imageAlt: 'Vídeos do projeto Fazendo Comuns',
   },
   {
@@ -54,7 +54,7 @@ export const multimidiaSections: MultimidiaSection[] = [
       'Podcast “Direito ao Recreio” e outras produções em áudio do projeto.',
     icon: Mic,
     color: 'orange',
-    image: assetSrc(podcastPreview),
+    image: img('capas-podcast/Direito-Ao-Recreio.jpg'),
     imageAlt: 'Podcast Direito ao Recreio',
   },
 ]

@@ -2,7 +2,6 @@ import type { LucideIcon } from 'lucide-react'
 import {
   BookOpen,
   Calendar,
-  FileText,
   FolderOpen,
   GraduationCap,
   Images,
@@ -95,11 +94,6 @@ export const adminNavItems: AdminNavItem[] = [
     label: 'Links Parceiros',
     href: '/admin/links-parceiros',
     icon: Link2,
-  },
-  {
-    label: 'Páginas',
-    href: '/admin/paginas',
-    icon: FileText,
   },
   {
     label: 'Biblioteca de Mídia',

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -13,11 +14,13 @@ export function NoticiaCard({ noticia }: NoticiaCardProps) {
     <article className="group overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-medium">
       <div className="flex flex-col sm:flex-row sm:items-stretch">
         <div className="relative h-44 shrink-0 overflow-hidden sm:h-auto sm:w-44 md:w-52">
-          <img
+          <Image
             src={noticia.heroImage}
             alt={noticia.listImageAlt}
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
+            fill
+            sizes="(max-width: 639px) 100vw, (max-width: 767px) 176px, 208px"
+            quality={60}
+            className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
           />
         </div>
 

@@ -52,7 +52,7 @@ export const equipeKeys = {
   colaborador: (id: string) => ['admin', 'colaboradores', id] as const,
 }
 
-function useMockFallback<T>(mockItems: T[], enabled: boolean) {
+function getMockFallback<T>(mockItems: T[], enabled: boolean) {
   return {
     data: mockItems,
     isLoading: false,
@@ -74,7 +74,7 @@ export function usePesquisadores() {
   })
 
   if (!enabled) {
-    return { ...useMockFallback(mock, false), refetch: async () => ({}) }
+    return { ...getMockFallback(mock, false), refetch: async () => ({}) }
   }
 
   return query
@@ -181,7 +181,7 @@ export function useAssistentes() {
     enabled,
   })
 
-  if (!enabled) return { ...useMockFallback(mock, false), refetch: async () => ({}) }
+  if (!enabled) return { ...getMockFallback(mock, false), refetch: async () => ({}) }
   return query
 }
 
@@ -261,7 +261,7 @@ export function useConsultores() {
     enabled,
   })
 
-  if (!enabled) return { ...useMockFallback(mock, false), refetch: async () => ({}) }
+  if (!enabled) return { ...getMockFallback(mock, false), refetch: async () => ({}) }
   return query
 }
 
@@ -341,7 +341,7 @@ export function useColaboradores() {
     enabled,
   })
 
-  if (!enabled) return { ...useMockFallback(mock, false), refetch: async () => ({}) }
+  if (!enabled) return { ...getMockFallback(mock, false), refetch: async () => ({}) }
   return query
 }
 

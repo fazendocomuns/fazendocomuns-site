@@ -14,14 +14,14 @@ export function HomeNav() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <nav aria-label="Navegação principal" className="relative w-full">
+    <nav aria-label="Navegação principal" className="relative z-20 w-full">
       {/* Desktop */}
       <div className="hidden flex-wrap items-center justify-center gap-2 lg:flex">
         <ul className="flex flex-wrap items-center justify-center gap-1">
         {mainNavigation.map((item) => (
           <li
             key={item.href}
-            className="relative"
+            className="relative z-20"
             onMouseEnter={() => item.children && setOpenDropdown(item.href)}
             onMouseLeave={() => setOpenDropdown(null)}
           >
@@ -48,7 +48,7 @@ export function HomeNav() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute top-full left-1/2 z-50 mt-1 min-w-[220px] -translate-x-1/2 rounded-2xl border border-border/60 bg-card p-2 shadow-medium"
+                  className="absolute top-full left-1/2 z-[60] mt-1 min-w-[220px] -translate-x-1/2 rounded-2xl border border-border/60 bg-card p-2 shadow-medium"
                 >
                   {item.children.map((child) => (
                     <Link

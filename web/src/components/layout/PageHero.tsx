@@ -1,8 +1,6 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ChevronRight } from 'lucide-react'
-import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import quebraCabecaImg from '@/assets/imgs/quebra_Cabeça.png'
 
@@ -19,15 +17,6 @@ export function PageHero({
   breadcrumb,
   className,
 }: PageHeroProps) {
-  const shouldReduceMotion = useReducedMotion()
-  const motionProps = shouldReduceMotion
-    ? {}
-    : {
-        initial: { opacity: 0, scale: 0.9 },
-        animate: { opacity: 1, scale: 1 },
-        transition: { duration: 0.5 },
-      }
-
   return (
     <header
       className={cn(
@@ -61,32 +50,26 @@ export function PageHero({
         )}
 
         <div className="relative mx-auto max-w-4xl text-center">
-          <motion.img
-            {...motionProps}
-            src={quebraCabecaImg.src}
+          <Image
+            src={quebraCabecaImg}
             alt=""
-            className="mx-auto mb-6 h-20 w-auto object-contain md:h-24"
+            sizes="96px"
+            className="page-hero-puzzle mx-auto mb-6 h-20 w-auto object-contain md:h-24"
             aria-hidden="true"
           />
 
-          <motion.h1
-            initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: shouldReduceMotion ? 0 : 0.1 }}
-            className="font-heading text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl"
+          <h1
+            className="page-hero-title font-heading text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl"
           >
             {title}
-          </motion.h1>
+          </h1>
 
           {subtitle && (
-            <motion.p
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.6, delay: shouldReduceMotion ? 0 : 0.2 }}
-              className="mt-5 font-body text-lg leading-relaxed text-muted-foreground md:text-xl"
+            <p
+              className="page-hero-subtitle mt-5 font-body text-lg leading-relaxed text-muted-foreground md:text-xl"
             >
               {subtitle}
-            </motion.p>
+            </p>
           )}
         </div>
       </div>

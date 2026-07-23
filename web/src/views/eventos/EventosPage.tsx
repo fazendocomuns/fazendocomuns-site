@@ -1,5 +1,4 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { Calendar, MapPin, ArrowUpRight } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
@@ -28,10 +27,13 @@ export function EventosPage({ events }: EventosPageProps) {
               <ScrollReveal key={event.id} delay={index * 0.1}>
                 <article className="group overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft transition-all hover:-translate-y-1 hover:shadow-medium">
                   <div className="relative h-52 overflow-hidden md:h-56">
-                    <img
+                    <Image
                       src={event.image}
                       alt={event.imageAlt}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      fill
+                      sizes="(max-width: 767px) 100vw, 50vw"
+                      quality={60}
+                      className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/50 to-transparent" />
                     <div className="absolute right-0 bottom-0 left-0 p-6">

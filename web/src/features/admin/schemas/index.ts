@@ -114,6 +114,25 @@ export const livroSchema = z.object({
   authors: z.string().min(1, 'Informe ao menos um autor'),
   organizers: z.string(),
   summary: z.string().min(10, 'Resumo muito curto'),
+  editorialInfo: z.array(
+    z.object({
+      label: z.string().min(1, 'Informe o rótulo'),
+      value: z.string().min(1, 'Informe o valor'),
+    }),
+  ),
+  credits: z.array(
+    z.object({
+      label: z.string().min(1, 'Informe o rótulo'),
+      names: z.string().min(1, 'Informe ao menos um nome'),
+    }),
+  ),
+  relatedLinks: z.array(
+    z.object({
+      label: z.string().min(1, 'Informe o título do link'),
+      href: z.string().min(1, 'Informe a URL'),
+      description: z.string(),
+    }),
+  ),
   readUrl: z.string().min(1, 'Informe a URL de leitura'),
   downloadUrl: z.string().min(1, 'Informe a URL de download'),
   downloadLabel: z.string(),

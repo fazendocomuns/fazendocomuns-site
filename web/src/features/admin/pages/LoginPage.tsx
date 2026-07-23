@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import { useEffect, useRef, useState } from 'react'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -24,12 +25,20 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [state, setState] = useState<LoginState>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       router.replace('/admin')
     }
   }, [isAuthenticated, isLoading, router])
+
+  useEffect(
+    () => () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current)
+    },
+    [],
+  )
 
   if (isLoading) {
     return (
@@ -51,7 +60,7 @@ export function LoginPage() {
     try {
       await login(email, password)
       setState('success')
-      setTimeout(() => router.replace('/admin'), 500)
+      redirectTimerRef.current = setTimeout(() => router.replace('/admin'), 500)
     } catch (err) {
       setState('error')
       setErrorMessage(
@@ -90,7 +99,16 @@ export function LoginPage() {
         className="relative hidden w-1/2 overflow-hidden lg:flex lg:flex-col lg:justify-between"
         aria-hidden="true"
       >
-        <img src={bannerImg.src} alt="" className="absolute inset-0 size-full object-cover" />
+        <Image
+          src={bannerImg}
+          alt=""
+          fill
+          sizes="50vw"
+          quality={60}
+          preload
+          placeholder="blur"
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/85 via-neutral-900/70 to-brand-red/40" />
         <div className="relative z-10 p-10 xl:p-14">
           <Logo className="h-12 brightness-0 invert" linkToHome={false} />

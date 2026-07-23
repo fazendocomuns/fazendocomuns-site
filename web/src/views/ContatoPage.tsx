@@ -1,11 +1,15 @@
 'use client'
 
+import Image from 'next/image'
 import { Mail, MapPin } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
 import { InstagramIcon } from '@/components/shared/InstagramIcon'
 import { ContactForm } from '@/features/contato/components/ContactForm'
 import { contactInfo } from '@/features/contato/data/contatoContent'
-import campusImg from '@/assets/imgs/bannerr01.jpg'
+import { supabaseImageLoader } from '@/lib/supabaseImageLoader'
+
+const campusImg =
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/pagina-contato/instituto-de-psico.jpg'
 
 export function ContatoPage() {
   return (
@@ -20,11 +24,15 @@ export function ContatoPage() {
           <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
             {/* Informações */}
             <div>
-              <div className="overflow-hidden rounded-2xl shadow-medium">
-                <img
-                  src={campusImg.src}
-                  alt="Atividades do projeto Fazendo Comuns em escola parceira"
-                  className="aspect-[4/3] w-full object-cover"
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-muted shadow-medium">
+                <Image
+                  src={campusImg}
+                  alt="Instituto de Psicologia da UFRJ — Campus da Praia Vermelha"
+                  fill
+                  sizes="(max-width: 1023px) 100vw, 50vw"
+                  quality={60}
+                  loader={supabaseImageLoader}
+                  className="object-cover"
                 />
               </div>
 

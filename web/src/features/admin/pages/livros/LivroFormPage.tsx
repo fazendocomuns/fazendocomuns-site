@@ -3,9 +3,10 @@
 import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRouteId } from '@/features/admin/hooks/useRouteId'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Plus, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -22,6 +23,28 @@ import { ImagePicker } from '@/features/admin/components/ImagePicker'
 import { useLivro, useLivros, useLivroMutations } from '@/features/admin/api/adminEntities'
 import { livroSchema, type LivroFormValues } from '@/features/admin/schemas'
 import { useAdminUiStore } from '@/features/admin/store/adminUiStore'
+
+const defaultEditorialInfo: LivroFormValues['editorialInfo'] = [
+  { label: 'Formato', value: 'Livro digital (PDF)' },
+  { label: 'Idioma', value: 'Português (Brasil)' },
+  { label: 'Ano', value: '' },
+  { label: 'Editora', value: 'Projeto Fazendo Comuns' },
+  {
+    label: 'Instituição',
+    value: 'Instituto de Psicologia — Universidade Federal do Rio de Janeiro (UFRJ)',
+  },
+  { label: 'Licença de acesso', value: 'Leitura e download gratuitos' },
+]
+
+const defaultCredits: LivroFormValues['credits'] = [
+  { label: 'Coordenação científica', names: 'Lucia Rabello de Castro' },
+  { label: 'Pesquisa e produção', names: 'Equipe do Projeto Fazendo Comuns / UFRJ' },
+  {
+    label: 'Instituição responsável',
+    names:
+      'Instituto de Psicologia — Universidade Federal do Rio de Janeiro (UFRJ)',
+  },
+]
 
 export function LivroFormPage() {
   const id = useRouteId()
@@ -42,11 +65,14 @@ export function LivroFormPage() {
       authors: '',
       organizers: '',
       summary: '',
+      editorialInfo: defaultEditorialInfo,
+      credits: defaultCredits,
+      relatedLinks: [],
       readUrl: '',
       downloadUrl: '',
-      downloadLabel: '',
+      downloadLabel: 'Baixar PDF',
       datePublished: '',
-      publisher: '',
+      publisher: 'Projeto Fazendo Comuns — UFRJ',
       categoryLabel: '',
       seoTitle: '',
       seoDescription: '',
@@ -66,6 +92,25 @@ export function LivroFormPage() {
       authors: existing.authors.join(', '),
       organizers: existing.organizers.join(', '),
       summary: existing.summary.join('\n\n'),
+      editorialInfo:
+        existing.editorialInfo.length > 0
+          ? existing.editorialInfo
+          : defaultEditorialInfo,
+      credits:
+        existing.credits.length > 0
+          ? existing.credits.map((credit) => ({
+              label: credit.label,
+              names: credit.names.join(', '),
+            }))
+          : defaultCredits,
+      relatedLinks:
+        existing.relatedLinks.length > 0
+          ? existing.relatedLinks.map((link) => ({
+              label: link.label,
+              href: link.href,
+              description: link.description ?? '',
+            }))
+          : [],
       readUrl: existing.readUrl,
       downloadUrl: existing.downloadUrl,
       downloadLabel: existing.downloadLabel,
@@ -88,6 +133,10 @@ export function LivroFormPage() {
     resolver: zodResolver(livroSchema),
     values: formValues ?? emptyValues,
   })
+
+  const editorialFields = useFieldArray({ control, name: 'editorialInfo' })
+  const creditFields = useFieldArray({ control, name: 'credits' })
+  const relatedLinkFields = useFieldArray({ control, name: 'relatedLinks' })
 
   const isSubmitting = create.isPending || update.isPending
 
@@ -169,17 +218,189 @@ export function LivroFormPage() {
             />
           </FormField>
 
-          <FormField label="Resumo" required error={errors.summary?.message}>
+          <FormField
+            label="Sobre o livro"
+            required
+            error={errors.summary?.message}
+            hint="Separe parágrafos com uma linha em branco."
+          >
             <Textarea
-              rows={6}
-              placeholder="Separe parágrafos com uma linha em branco"
+              rows={8}
+              placeholder="Texto sobre o livro..."
               {...register('summary')}
               aria-invalid={Boolean(errors.summary)}
             />
           </FormField>
         </FormSection>
 
-        <FormSection title="Links e publicação" description="URLs e dados editoriais.">
+        <FormSection
+          title="Informações editoriais"
+          description="Formato, idioma, ano, editora, instituição e licença de acesso."
+        >
+          <div className="space-y-4">
+            {editorialFields.fields.map((field, index) => (
+              <div
+                key={field.id}
+                className="grid gap-3 rounded-xl border border-border/60 p-4 sm:grid-cols-[1fr_1.4fr_auto]"
+              >
+                <FormField
+                  label="Rótulo"
+                  error={errors.editorialInfo?.[index]?.label?.message}
+                >
+                  <Input
+                    placeholder="Ex.: Formato"
+                    {...register(`editorialInfo.${index}.label`)}
+                  />
+                </FormField>
+                <FormField
+                  label="Valor"
+                  error={errors.editorialInfo?.[index]?.value?.message}
+                >
+                  <Input
+                    placeholder="Ex.: Livro digital (PDF)"
+                    {...register(`editorialInfo.${index}.value`)}
+                  />
+                </FormField>
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    aria-label="Remover informação editorial"
+                    onClick={() => editorialFields.remove(index)}
+                    disabled={editorialFields.fields.length <= 1}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => editorialFields.append({ label: '', value: '' })}
+          >
+            <Plus className="size-4" />
+            Adicionar informação editorial
+          </Button>
+        </FormSection>
+
+        <FormSection
+          title="Créditos"
+          description="Coordenação científica, pesquisa e produção, instituição responsável."
+        >
+          <div className="space-y-4">
+            {creditFields.fields.map((field, index) => (
+              <div
+                key={field.id}
+                className="grid gap-3 rounded-xl border border-border/60 p-4 sm:grid-cols-[1fr_1.4fr_auto]"
+              >
+                <FormField label="Rótulo" error={errors.credits?.[index]?.label?.message}>
+                  <Input
+                    placeholder="Ex.: Coordenação científica"
+                    {...register(`credits.${index}.label`)}
+                  />
+                </FormField>
+                <FormField
+                  label="Nomes"
+                  hint="Separe vários nomes com vírgula."
+                  error={errors.credits?.[index]?.names?.message}
+                >
+                  <Input
+                    placeholder="Nome 1, Nome 2"
+                    {...register(`credits.${index}.names`)}
+                  />
+                </FormField>
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    aria-label="Remover crédito"
+                    onClick={() => creditFields.remove(index)}
+                    disabled={creditFields.fields.length <= 1}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => creditFields.append({ label: '', names: '' })}
+          >
+            <Plus className="size-4" />
+            Adicionar crédito
+          </Button>
+        </FormSection>
+
+        <FormSection
+          title="Conteúdos relacionados"
+          description="Links para páginas e materiais relacionados ao livro."
+        >
+          <div className="space-y-4">
+            {relatedLinkFields.fields.map((field, index) => (
+              <div
+                key={field.id}
+                className="space-y-3 rounded-xl border border-border/60 p-4"
+              >
+                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                  <FormField
+                    label="Título"
+                    error={errors.relatedLinks?.[index]?.label?.message}
+                  >
+                    <Input
+                      placeholder="Ex.: Evento relacionado"
+                      {...register(`relatedLinks.${index}.label`)}
+                    />
+                  </FormField>
+                  <div className="flex items-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      aria-label="Remover link relacionado"
+                      onClick={() => relatedLinkFields.remove(index)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+                <FormField label="URL" error={errors.relatedLinks?.[index]?.href?.message}>
+                  <Input
+                    placeholder="/eventos/exemplo"
+                    {...register(`relatedLinks.${index}.href`)}
+                  />
+                </FormField>
+                <FormField
+                  label="Descrição"
+                  error={errors.relatedLinks?.[index]?.description?.message}
+                >
+                  <Textarea
+                    rows={2}
+                    placeholder="Breve descrição do conteúdo relacionado"
+                    {...register(`relatedLinks.${index}.description`)}
+                  />
+                </FormField>
+              </div>
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() =>
+              relatedLinkFields.append({ label: '', href: '', description: '' })
+            }
+          >
+            <Plus className="size-4" />
+            Adicionar conteúdo relacionado
+          </Button>
+        </FormSection>
+
+        <FormSection title="Links e publicação" description="URLs e dados de publicação.">
           <FormField label="URL de leitura" required error={errors.readUrl?.message}>
             <Input {...register('readUrl')} aria-invalid={Boolean(errors.readUrl)} />
           </FormField>
@@ -194,7 +415,11 @@ export function LivroFormPage() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField label="Data de publicação" error={errors.datePublished?.message}>
-              <Input type="date" {...register('datePublished')} aria-invalid={Boolean(errors.datePublished)} />
+              <Input
+                type="date"
+                {...register('datePublished')}
+                aria-invalid={Boolean(errors.datePublished)}
+              />
             </FormField>
             <FormField label="Editora" required error={errors.publisher?.message}>
               <Input {...register('publisher')} aria-invalid={Boolean(errors.publisher)} />
@@ -223,7 +448,11 @@ export function LivroFormPage() {
         <FormSection title="Exibição">
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField label="Ordem de exibição" error={errors.displayOrder?.message}>
-              <Input type="number" min={1} {...register('displayOrder', { valueAsNumber: true })} />
+              <Input
+                type="number"
+                min={1}
+                {...register('displayOrder', { valueAsNumber: true })}
+              />
             </FormField>
             <FormField label="Status" error={errors.status?.message}>
               <Controller

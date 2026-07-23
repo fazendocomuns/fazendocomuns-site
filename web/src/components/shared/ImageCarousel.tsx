@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { supabaseImageLoader } from '@/lib/supabaseImageLoader'
 import { cn } from '@/lib/utils'
 
 export interface CarouselSlide {
@@ -30,7 +31,10 @@ export function ImageCarousel({
 }: ImageCarouselProps) {
   const [current, setCurrent] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
+  const [isInViewport, setIsInViewport] = useState(true)
+  const [isDocumentVisible, setIsDocumentVisible] = useState(true)
   const reducedMotion = useReducedMotion() ?? false
+  const sectionRef = useRef<HTMLElement>(null)
 
   const goTo = useCallback(
     (index: number) => {
@@ -39,19 +43,61 @@ export function ImageCarousel({
     [slides.length],
   )
 
-  const next = useCallback(() => goTo(current + 1), [current, goTo])
-  const prev = useCallback(() => goTo(current - 1), [current, goTo])
+  const next = useCallback(() => {
+    setCurrent((value) => (slides.length ? (value + 1) % slides.length : 0))
+  }, [slides.length])
+  const prev = useCallback(() => {
+    setCurrent((value) => (slides.length ? (value - 1 + slides.length) % slides.length : 0))
+  }, [slides.length])
 
   useEffect(() => {
-    if (!autoplay || isPaused || reducedMotion || slides.length <= 1) return
+    const section = sectionRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInViewport(entry.isIntersecting),
+      { threshold: 0.1 },
+    )
+    const onVisibilityChange = () => setIsDocumentVisible(!document.hidden)
+
+    observer.observe(section)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      observer.disconnect()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (
+      !autoplay ||
+      isPaused ||
+      !isInViewport ||
+      !isDocumentVisible ||
+      reducedMotion ||
+      slides.length <= 1
+    ) {
+      return
+    }
     const timer = setInterval(next, interval)
     return () => clearInterval(timer)
-  }, [autoplay, isPaused, interval, next, reducedMotion, slides.length])
+  }, [
+    autoplay,
+    isDocumentVisible,
+    isInViewport,
+    isPaused,
+    interval,
+    next,
+    reducedMotion,
+    slides.length,
+  ])
 
   if (slides.length === 0) return null
 
   return (
     <section
+      ref={sectionRef}
       className={cn('relative w-full', className)}
       aria-roledescription="carrossel"
       aria-label="Galeria de imagens do projeto"
@@ -81,8 +127,10 @@ export function ImageCarousel({
               src={slides[current].src}
               alt={slides[current].alt}
               fill
-              priority={current === 0}
+              loading={current === 0 ? 'eager' : 'lazy'}
               sizes="100vw"
+              quality={60}
+              loader={supabaseImageLoader}
               className="object-cover"
             />
             {slides[current].caption && (

@@ -1,9 +1,5 @@
-const wixBase = 'https://static.wixstatic.com/media'
-
-function wixLogo(fileId: string, ext: 'png' | 'jpg' | 'jpeg', width: number, height: number) {
-  const file = `${fileId}~mv2.${ext}`
-  return `${wixBase}/${file}/v1/fill/w_${width},h_${height},al_c,q_90,usm_0.66_1.00_0.01/${file}`
-}
+const footerImg = (file: string) =>
+  `https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/pagina-footer/${file}`
 
 export interface FooterPartnerLogo {
   alt: string
@@ -23,21 +19,37 @@ export const footerContent = {
     realization: [
       {
         alt: 'Logo oficial UFRJ',
-        logo: wixLogo('92a7cc_91df9dcc8a2a41cca95f5cccd58296c9', 'png', 540, 540),
+        logo: footerImg('ufrj-realizacao.png'),
+      },
+      {
+        alt: 'NIAJ — Núcleo Interdisciplinar de Estudos da Infância, Adolescência e Juventude',
+        logo: footerImg('niaj-realizacao.svg'),
+      },
+      {
+        alt: 'Fazendo Comuns',
+        logo: footerImg('fazendocomuns-em-pe-realizacao.png'),
       },
     ] satisfies FooterPartnerLogo[],
     support: [
       {
         alt: 'Instituto de Psicologia — UFRJ',
-        logo: wixLogo('92a7cc_8e24bf8a8a6a4369b580acf019d64e9f', 'png', 644, 296),
+        logo: footerImg('IP-apoio.png'),
       },
       {
         alt: 'FAPERJ',
-        logo: wixLogo('92a7cc_a8497b11294046d497c3af244191afc6', 'png', 296, 468),
+        logo: footerImg('faperj-apoio.png'),
       },
       {
         alt: 'Secretaria Municipal de Educação — Rio de Janeiro',
-        logo: wixLogo('92a7cc_0a4e3e4856c54a46a91f901ff268cc9c', 'png', 818, 208),
+        logo: footerImg('sme-apoio.png'),
+      },
+      {
+        alt: 'CFCH — UFRJ',
+        logo: footerImg('cfch-apoio.png'),
+      },
+      {
+        alt: 'CNPq',
+        logo: footerImg('CNPq-apoio.png'),
       },
     ] satisfies FooterPartnerLogo[],
   },

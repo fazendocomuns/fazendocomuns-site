@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils'
 
 export function ContactForm() {
   const [isSuccess, setIsSuccess] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const {
     register,
@@ -36,17 +37,20 @@ export function ContactForm() {
   })
 
   async function onSubmit(data: ContactFormValues) {
+    setSubmitError(null)
+
     try {
-      if (isSupabaseReady()) {
-        await submitContactMessage(data)
-      } else {
-        await new Promise((resolve) => setTimeout(resolve, 800))
-        console.info('[Contato]', data)
+      if (!isSupabaseReady()) {
+        throw new Error('Serviço de contato indisponível')
       }
+
+      await submitContactMessage(data)
       setIsSuccess(true)
       reset()
     } catch {
-      // keep form open on error — user can retry
+      setSubmitError(
+        'Não foi possível enviar sua mensagem agora. Tente novamente ou use o e-mail informado ao lado.',
+      )
     }
   }
 
@@ -78,6 +82,7 @@ export function ContactForm() {
       className="rounded-2xl border border-border/60 bg-card p-6 shadow-soft md:p-8"
       aria-labelledby="contact-form-title"
       aria-busy={isSubmitting}
+      aria-describedby={submitError ? 'contact-submit-error' : undefined}
     >
       <h2
         id="contact-form-title"
@@ -171,6 +176,16 @@ export function ContactForm() {
           </>
         )}
       </Button>
+
+      {submitError ? (
+        <p
+          id="contact-submit-error"
+          className="mt-4 max-w-xl font-body text-sm text-destructive"
+          role="alert"
+        >
+          {submitError}
+        </p>
+      ) : null}
     </form>
   )
 }

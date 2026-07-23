@@ -1,5 +1,4 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ArrowLeft, Download } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
@@ -31,12 +30,16 @@ export function ManifestoDasProfessorasPage({ content: manifestoDasProfessorasCo
           <ScrollReveal>
             <article className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
               <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-border/60 bg-card shadow-medium lg:max-w-none">
-                <img
+                <Image
                   src={cover}
                   alt={coverAlt}
-                  className="aspect-[491/660] w-full object-cover"
+                  width={491}
+                  height={660}
+                  sizes="(max-width: 1023px) 384px, 50vw"
+                  quality={75}
                   loading="eager"
-                  decoding="async"
+                  fetchPriority="high"
+                  className="h-auto aspect-[491/660] w-full object-cover"
                 />
               </div>
 

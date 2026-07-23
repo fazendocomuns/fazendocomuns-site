@@ -1,15 +1,16 @@
-import coverImg from '@/assets/imgs/img-jornalziho-db.png'
 import type { Livro } from '@/features/livros/types'
-import { assetSrc } from '@/lib/assetSrc'
+import { livroPdfUrls } from '@/features/livros/data/livroPdfUrls'
 
-const pdfUrl =
-  'https://www.fazendocomuns.com.br/_files/ugd/92a7cc_eb914e5b0f6742f0996ab14af98d5b0d.pdf'
+const cover =
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/capas-de-livros/capa-do-livro-jornal-db.jpeg'
+
+const pdfUrl = livroPdfUrls.jornalzinhoDaEscolaDb
 
 export const jornalzinhoDaEscolaDbBook = {
   slug: 'jornalzinho-da-escola-db',
   title: 'Jornalzinho da escola DB',
   subtitle: 'Publicação produzida por crianças da Escola Municipal Dona Beatriz',
-  cover: assetSrc(coverImg),
+  cover,
   coverAlt: 'Capa do Jornalzinho da escola DB',
   categoryLabel: 'Publicação',
   ogType: 'article',
@@ -25,39 +26,33 @@ export const jornalzinhoDaEscolaDbBook = {
     'Leia online ou faça o download gratuito para conhecer as produções coletivas das crianças e o trabalho de pesquisa-intervenção realizado com a escola parceira.',
   ],
   editorialInfo: [
-    {
-      label: 'Formato',
-      value: 'Publicação digital (PDF)',
-    },
-    {
-      label: 'Idioma',
-      value: 'Português (Brasil)',
-    },
-    {
-      label: 'Ano',
-      value: '2026',
-    },
+    { label: 'Formato', value: 'Publicação digital (PDF)' },
+    { label: 'Idioma', value: 'Português (Brasil)' },
+    { label: 'Ano', value: '2026' },
+    { label: 'Editora', value: 'Projeto Fazendo Comuns' },
     {
       label: 'Instituição',
-      value: 'Projeto Fazendo Comuns — UFRJ',
+      value: 'Instituto de Psicologia — Universidade Federal do Rio de Janeiro (UFRJ)',
     },
-    {
-      label: 'Licença de acesso',
-      value: 'Leitura e download gratuitos',
-    },
+    { label: 'Licença de acesso', value: 'Leitura e download gratuitos' },
   ],
   credits: [
-    {
-      label: 'Produção',
-      names: ['Crianças da Escola Municipal Dona Beatriz'],
-    },
     {
       label: 'Coordenação científica',
       names: ['Lucia Rabello de Castro'],
     },
     {
-      label: 'Pesquisa e mediação',
-      names: ['Equipe do Projeto Fazendo Comuns / UFRJ'],
+      label: 'Pesquisa e produção',
+      names: [
+        'Crianças da Escola Municipal Dona Beatriz',
+        'Equipe do Projeto Fazendo Comuns / UFRJ',
+      ],
+    },
+    {
+      label: 'Instituição responsável',
+      names: [
+        'Instituto de Psicologia — Universidade Federal do Rio de Janeiro (UFRJ)',
+      ],
     },
   ],
   readUrl: pdfUrl,

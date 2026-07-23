@@ -122,6 +122,9 @@ export interface AdminLivro extends BaseEntity {
   authors: string[]
   organizers: string[]
   summary: string[]
+  editorialInfo: { label: string; value: string }[]
+  credits: { label: string; names: string[] }[]
+  relatedLinks: { label: string; href: string; description?: string }[]
   readUrl: string
   downloadUrl: string
   downloadLabel: string

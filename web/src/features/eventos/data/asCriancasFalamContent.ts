@@ -11,24 +11,51 @@ export interface EventPanel {
   videoTitle?: string
 }
 
-const wixBase = 'https://static.wixstatic.com/media'
+export const asCriancasFalamHeroImage =
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/capa-de-eventos/capa-evento-as-criancas-falam/as-criancas-falam-flyer.jpg'
 
-function wixImage(
-  fileId: string,
-  ext: 'png' | 'jpeg' | 'jpg',
-  width: number,
-  height: number,
-) {
-  const file = `${fileId}~mv2.${ext}`
-  return `${wixBase}/${file}/v1/fill/w_${width},h_${height},al_c,q_85,usm_0.66_1.00_0.01/${file}`
-}
-
-export const asCriancasFalamHeroImage = wixImage(
-  '92a7cc_63e27a0ba9bd46e286ed2b11c15e3966',
-  'jpg',
-  921,
-  1300,
-)
+export const asCriancasFalamPhotos = [
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Certificados-023.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Certificados-038.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Encerramento-037.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Equipe-e-estudantes-040.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Equipe-Fazendo-Comuns-039.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Mesa-de-Abertura-006.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Mesa-de-Abertura-007.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-I-009.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-I-010.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-I-011.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-I-012.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-II-014.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-II-015.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-II-016.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-II-017.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-II-019.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-II-020.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-II-021.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-III-027.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-III-028.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-III-029.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-III-030.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-III-031.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-III-032.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-III-033.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-III-035.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Painel-III-036.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Plateia-008.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Plateia-013.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Plateia-018.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Plateia-022.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Plateia-026.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Plateia-034.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Recepcao-001.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Recepcao-002.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Recepcao-003.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Recepcao-004.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Recepcao-005.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Recreio-024.jpg',
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/evento-as-criancas-falam-fotos/Recreio-025.jpg',
+] as const
 
 export const asCriancasFalamEvent = {
   title: 'As Crianças Falam?',
@@ -36,8 +63,15 @@ export const asCriancasFalamEvent = {
     'Mobilizações públicas acerca do recreio escolar — evento na EMERJ, 5 de novembro de 2024.',
   image: asCriancasFalamHeroImage,
   imageAlt: 'Cartaz do evento As Crianças Falam? — Mobilizações públicas acerca do recreio escolar',
+  posters: [
+    {
+      src: asCriancasFalamHeroImage,
+      alt: 'Cartaz do evento As Crianças Falam? — Mobilizações públicas acerca do recreio escolar',
+    },
+  ],
   date: '5 de novembro de 2024',
   location: 'Escola de Magistratura do Rio de Janeiro (EMERJ)',
+  photos: [...asCriancasFalamPhotos],
   intro: [
     'Qual é o lugar das crianças na construção do projeto de educação pública? Como se dá a resposta dos adultos à fala e à ação coletiva das crianças nas suas reivindicações sobre a educação que recebem?',
     'O acúmulo de pesquisas ao longo de mais de uma década sobre a participação das crianças na escola, e mais recentemente no âmbito do projeto de pesquisa “Fazendo Comuns: a educação como projeto intra e co-geracional”, coordenado pela Profª Lucia Rabello de Castro, da Universidade Federal do Rio de Janeiro, aponta como um dos resultados mais significativos a reivindicação dos estudantes acerca do seu espaço e tempo para o recreio.',

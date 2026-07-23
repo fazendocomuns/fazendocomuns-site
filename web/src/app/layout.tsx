@@ -7,7 +7,6 @@ import './globals.css'
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
   style: ['normal', 'italic'],
   variable: '--font-dm-sans',
   display: 'swap',
@@ -15,7 +14,6 @@ const dmSans = DM_Sans({
 
 const fredoka = Fredoka({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
   variable: '--font-fredoka',
   display: 'swap',
 })
@@ -29,7 +27,6 @@ const patrickHand = Patrick_Hand({
 
 const sourceSerif = Source_Serif_4({
   subsets: ['latin'],
-  weight: ['400', '600'],
   style: ['normal', 'italic'],
   variable: '--font-source-serif',
   display: 'swap',

@@ -1,8 +1,13 @@
+import Image from 'next/image'
+import { supabaseImageLoader } from '@/lib/supabaseImageLoader'
 import { cn } from '@/lib/utils'
 
 interface IconProps {
   className?: string
 }
+
+const LATTES_LOGO_URL =
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/fazendocomuns-logo/logo-lattes.png'
 
 export function LinkedInIcon({ className }: IconProps) {
   return (
@@ -17,24 +22,25 @@ export function LinkedInIcon({ className }: IconProps) {
   )
 }
 
-/** Ícone do Currículo Lattes (CNPq). */
+/** Logo oficial do Currículo Lattes (CNPq). */
 export function LattesIcon({ className }: IconProps) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={cn('size-4', className)}
+    <Image
+      src={LATTES_LOGO_URL}
+      alt=""
       aria-hidden="true"
-    >
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <path d="M14 2v6h6" />
-      <path d="M8 13h8" />
-      <path d="M8 17h5" />
-      <path d="M8 9h2" />
-    </svg>
+      width={18}
+      height={18}
+      sizes="18px"
+      quality={60}
+      loader={supabaseImageLoader}
+      className={cn(
+        'size-4 object-contain transition-[filter]',
+        // Tema escuro: logo branca; no hover (fundo vermelho) também fica branca
+        'dark:brightness-0 dark:invert',
+        'group-hover:brightness-0 group-hover:invert',
+        className,
+      )}
+    />
   )
 }

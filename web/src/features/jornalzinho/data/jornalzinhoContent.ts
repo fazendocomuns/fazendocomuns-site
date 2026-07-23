@@ -1,6 +1,3 @@
-import coverImg from '@/assets/imgs/img-jornalziho-db.png'
-import { assetSrc } from '@/lib/assetSrc'
-
 export const jornalzinhoContent = {
   title: 'Jornalzinho da escola DB',
   heading: 'Jornalzinho da escola DB',
@@ -14,7 +11,8 @@ export const jornalzinhoContent = {
     slug: 'jornalzinho-da-escola-db',
     title: 'Jornalzinho da escola DB',
     subtitle: 'Publicação produzida por crianças da Escola Municipal Dona Beatriz',
-    cover: assetSrc(coverImg),
+    cover:
+      'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/capas-de-livros/capa-do-livro-jornal-db.jpeg',
     coverAlt: 'Capa do Jornalzinho da escola DB',
     href: '/livros/jornalzinho-da-escola-db',
     teaser:

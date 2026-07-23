@@ -1,10 +1,10 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ArrowLeft, Calendar, Camera, Download, MapPin } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
 import { Button } from '@/components/ui/button'
+import { EventFlyerGallery } from '@/features/eventos/components/EventFlyerGallery'
 import { EventPanelVideo } from '@/features/eventos/components/EventPanelVideo'
 import { recrearMundosOutrosEvent as recrearMundosFallback } from '@/features/eventos/data/recrearMundosOutrosContent'
 import { proseParagraph } from '@/lib/typography'
@@ -13,7 +13,9 @@ interface RecrearMundosOutrosPageProps {
   content: typeof recrearMundosFallback
 }
 
-export function RecrearMundosOutrosPage({ content: recrearMundosOutrosEvent }: RecrearMundosOutrosPageProps) {
+export function RecrearMundosOutrosPage({
+  content: recrearMundosOutrosEvent,
+}: RecrearMundosOutrosPageProps) {
   const {
     title,
     subtitle,
@@ -40,46 +42,30 @@ export function RecrearMundosOutrosPage({ content: recrearMundosOutrosEvent }: R
       <section className="section-padding bg-background" aria-label="Sobre o evento">
         <div className="container-app mx-auto max-w-6xl">
           <ScrollReveal>
-            <div className="space-y-5">
-              {intro.map((paragraph) => (
-                <p
-                  key={paragraph.slice(0, 48)}
-                  className={proseParagraph}
-                >
-                  {paragraph}
-                </p>
-              ))}
-            </div>
+            <article className="grid gap-10 lg:grid-cols-[minmax(220px,320px)_1fr] lg:items-start lg:gap-12">
+              <EventFlyerGallery posters={posters} title={title} />
 
-            <ul className="mt-8 flex flex-wrap gap-6 border-t border-border/60 pt-8">
-              <li className="flex items-center gap-2 font-body text-sm text-muted-foreground md:text-base">
-                <Calendar className="size-4 shrink-0 text-brand-orange" aria-hidden="true" />
-                {date}
-              </li>
-              <li className="flex items-start gap-2 font-body text-sm text-muted-foreground md:text-base">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-brand-red" aria-hidden="true" />
-                {location}
-              </li>
-            </ul>
-          </ScrollReveal>
+              <div className="min-w-0">
+                <div className="space-y-5">
+                  {intro.map((paragraph) => (
+                    <p key={paragraph.slice(0, 48)} className={proseParagraph}>
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
 
-          <ScrollReveal delay={0.1}>
-            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:gap-10">
-              {posters.map((poster) => (
-                <figure
-                  key={poster.src}
-                  className="mx-auto w-full max-w-xs overflow-hidden rounded-2xl border border-border/60 bg-card shadow-medium sm:max-w-none"
-                >
-                  <img
-                    src={poster.src}
-                    alt={poster.alt}
-                    className="w-full object-contain"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </figure>
-              ))}
-            </div>
+                <ul className="mt-8 flex flex-wrap gap-6 border-t border-border/60 pt-8">
+                  <li className="flex items-center gap-2 font-body text-sm text-muted-foreground md:text-base">
+                    <Calendar className="size-4 shrink-0 text-brand-orange" aria-hidden="true" />
+                    {date}
+                  </li>
+                  <li className="flex items-start gap-2 font-body text-sm text-muted-foreground md:text-base">
+                    <MapPin className="mt-0.5 size-4 shrink-0 text-brand-red" aria-hidden="true" />
+                    {location}
+                  </li>
+                </ul>
+              </div>
+            </article>
           </ScrollReveal>
         </div>
       </section>
@@ -122,11 +108,14 @@ export function RecrearMundosOutrosPage({ content: recrearMundosOutrosEvent }: R
           <ScrollReveal>
             <article className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
               <div className="mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-border/60 bg-card shadow-medium lg:max-w-none">
-                <img
+                <Image
                   src={relatedBook.cover}
                   alt={relatedBook.coverAlt}
+                  width={501}
+                  height={735}
+                  sizes="(max-width: 1023px) 384px, 50vw"
+                  quality={60}
                   className="aspect-[501/735] w-full object-cover"
-                  loading="lazy"
                   decoding="async"
                 />
               </div>
@@ -173,7 +162,7 @@ export function RecrearMundosOutrosPage({ content: recrearMundosOutrosEvent }: R
                   </h2>
                   <p className="mt-2 max-w-xl font-body text-sm text-muted-foreground md:text-base">
                     Registros fotográficos do evento Em Comuns…Recrear em mundos
-                    outros.
+                    outros. Em breve.
                   </p>
                 </div>
               </div>

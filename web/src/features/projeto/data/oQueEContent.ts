@@ -12,17 +12,11 @@ export interface OQueESection {
   imagePosition?: 'left' | 'right'
 }
 
-const wixBase = 'https://static.wixstatic.com/media'
+const supabaseStorage =
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public'
 
-function wixImage(
-  fileId: string,
-  ext: 'png' | 'jpeg' | 'jpg',
-  width: number,
-  height: number,
-) {
-  const file = `${fileId}~mv2.${ext}`
-  return `${wixBase}/${file}/v1/fill/w_${width},h_${height},al_c,q_85,usm_0.66_1.00_0.01/${file}`
-}
+const oQueEImg = (file: string) =>
+  `${supabaseStorage}/biblioteca-de-imagens/pagina-o-que-e/${file}`
 
 export const oQueEContent = {
   title: 'O que é',
@@ -33,7 +27,7 @@ export const oQueEContent = {
       id: 'introducao',
       imagePosition: 'right',
       image: {
-        src: wixImage('92a7cc_6c801e721f6b47f09ddb991436012b68', 'jpeg', 800, 600),
+        src: oQueEImg('crianca-segurando-cartaz-fazendo-comuns.jpg'),
         alt: 'Estudante segurando cartaz ilustrado do projeto Fazendo Comuns na escola',
         caption: 'Cartaz produzido no âmbito do projeto nas escolas parceiras.',
       },
@@ -49,7 +43,7 @@ export const oQueEContent = {
       title: 'Histórico do projeto',
       imagePosition: 'left',
       image: {
-        src: wixImage('92a7cc_f89609480d1b41ea997eec2664bda3c0', 'png', 1200, 600),
+        src: oQueEImg('livretos-HISTORICO-do-PROJETO.jpg'),
         alt: 'Materiais e registros do Projeto Combinação com crianças em escola pública',
         caption: 'Registro de atividades do Projeto Combinação nas escolas municipais.',
       },
@@ -64,7 +58,7 @@ export const oQueEContent = {
       title: 'Qualificação e credenciamento do projeto',
       imagePosition: 'right',
       image: {
-        src: wixImage('92a7cc_80d9fd8cce1c42678811f1b19b959797', 'png', 1200, 662),
+        src: oQueEImg('QUALIFICACAO-e-CREDENCIAMENTO-do-PROJETO.png'),
         alt: 'Logos de apoio e realização: FAPERJ, CNPq e Prefeitura do Rio — Educação',
       },
       paragraphs: [

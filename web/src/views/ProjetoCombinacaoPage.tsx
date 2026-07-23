@@ -1,5 +1,4 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ArrowLeft, Download } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
@@ -54,7 +53,15 @@ export function ProjetoCombinacaoPage({ content: projetoCombinacaoContent }: Pro
 
           <ScrollReveal delay={0.08}>
             <figure className="mb-10 mt-10 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft">
-              <img src={capa.url} alt={capa.alt} className="w-full object-contain" loading="lazy" />
+              <Image
+                src={capa.url}
+                alt={capa.alt}
+                width={1600}
+                height={900}
+                sizes="(max-width: 768px) 100vw, 768px"
+                quality={60}
+                className="h-auto w-full object-contain"
+              />
             </figure>
           </ScrollReveal>
 
@@ -69,11 +76,14 @@ export function ProjetoCombinacaoPage({ content: projetoCombinacaoContent }: Pro
                   key={image.url}
                   className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft"
                 >
-                  <img
+                  <Image
                     src={image.url}
                     alt={image.alt}
-                    className="w-full object-contain"
-                    loading="lazy"
+                    width={1000}
+                    height={800}
+                    sizes="(max-width: 639px) 100vw, 50vw"
+                    quality={60}
+                    className="h-auto w-full object-contain"
                   />
                 </figure>
               ))}
@@ -104,11 +114,14 @@ export function ProjetoCombinacaoPage({ content: projetoCombinacaoContent }: Pro
                 <Paragraphs paragraphs={book.paragraphs} />
 
                 <figure className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-soft">
-                  <img
+                  <Image
                     src={book.image.url}
                     alt={book.image.alt}
-                    className="w-full object-contain"
-                    loading="lazy"
+                    width={1600}
+                    height={900}
+                    sizes="(max-width: 768px) 100vw, 768px"
+                    quality={60}
+                    className="h-auto w-full object-contain"
                   />
                 </figure>
               </div>
@@ -145,12 +158,14 @@ export function ProjetoCombinacaoPage({ content: projetoCombinacaoContent }: Pro
           <ScrollReveal>
             <article className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
               <div className="mx-auto w-full max-w-[200px] overflow-hidden rounded-2xl border border-border/60 bg-card shadow-medium sm:max-w-[240px] lg:mx-0 lg:max-w-[260px]">
-                <img
+                <Image
                   src={recreioImage.url}
                   alt={recreioImage.alt}
-                  className="w-full object-contain"
-                  loading="lazy"
-                  decoding="async"
+                  width={501}
+                  height={735}
+                  sizes="260px"
+                  quality={60}
+                  className="h-auto w-full object-contain"
                 />
               </div>
 

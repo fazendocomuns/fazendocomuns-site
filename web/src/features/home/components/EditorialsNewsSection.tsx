@@ -1,5 +1,3 @@
-'use client'
-
 import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { format, parseISO } from 'date-fns'
@@ -7,8 +5,11 @@ import { ptBR } from 'date-fns/locale'
 import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
-import type { HomeFeaturedEditorial, HomeNewsItem } from '@/features/home/data/homeContent'
-import quebraCabecaImg from '@/assets/imgs/quebra_Cabeça.png'
+import {
+  editoriaisHomeImage,
+  type HomeFeaturedEditorial,
+  type HomeNewsItem,
+} from '@/features/home/data/homeContent'
 
 function NewsHomeCard({ news }: { news: HomeNewsItem }) {
   return (
@@ -20,7 +21,8 @@ function NewsHomeCard({ news }: { news: HomeNewsItem }) {
             alt={news.imageAlt}
             fill
             sizes="(max-width: 480px) 100vw, 144px"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            quality={60}
+            className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
           />
         </div>
 
@@ -74,12 +76,13 @@ export function EditorialsNewsSection({
             <article className="flex min-w-0 flex-col">
               <div className="mb-4 flex justify-center sm:mb-6 lg:justify-start">
                 <Image
-                  src={quebraCabecaImg}
+                  src={editoriaisHomeImage}
                   alt=""
                   className="h-24 w-auto max-w-full object-contain sm:h-32 md:h-40"
                   width={160}
                   height={160}
                   sizes="160px"
+                  quality={60}
                   aria-hidden="true"
                 />
               </div>

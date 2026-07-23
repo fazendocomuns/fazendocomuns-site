@@ -1,7 +1,5 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
-import { motion, useReducedMotion } from 'framer-motion'
 import {
   ArrowLeft,
   BookOpen,
@@ -19,8 +17,6 @@ interface LivroDetailViewProps {
 }
 
 export function LivroDetailView({ livro }: LivroDetailViewProps) {
-  const shouldReduceMotion = useReducedMotion()
-
   return (
     <>
       <header className="border-b border-border/40 bg-gradient-hero paper-texture">
@@ -44,22 +40,21 @@ export function LivroDetailView({ livro }: LivroDetailViewProps) {
           </nav>
 
           <div className="grid min-w-0 gap-10 lg:grid-cols-[minmax(240px,320px)_1fr] lg:items-start lg:gap-14">
-            <motion.div
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.5 }}
-              className="mx-auto w-full max-w-xs lg:mx-0 lg:max-w-none"
-            >
+            <div className="page-hero-title mx-auto w-full max-w-xs lg:mx-0 lg:max-w-none">
               <figure className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-medium">
-                <img
+                <Image
                   src={livro.cover}
                   alt={livro.coverAlt}
-                  className="aspect-[501/735] w-full object-cover"
                   width={501}
                   height={735}
+                  sizes="(max-width: 1023px) 320px, 300px"
+                  quality={75}
+                  loading="eager"
+                  fetchPriority="high"
+                  className="h-auto aspect-[501/735] w-full object-cover"
                 />
               </figure>
-            </motion.div>
+            </div>
 
             <div className="min-w-0">
               <p className="font-ui text-sm font-semibold uppercase tracking-widest text-brand-red">
@@ -178,6 +173,7 @@ export function LivroDetailView({ livro }: LivroDetailViewProps) {
                 title={`Leitura online — ${livro.title}`}
                 src={livro.readUrl}
                 className="h-[70vh] min-h-[420px] w-full bg-muted"
+                loading="lazy"
               />
             </div>
 

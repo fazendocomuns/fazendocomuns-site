@@ -1,5 +1,4 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ArrowLeft } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
@@ -26,13 +25,16 @@ export function CriancasFalamPage({ content }: CriancasFalamPageProps) {
         <div className="container-app">
           <ScrollReveal>
             <div className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-12">
-              <figure className="overflow-hidden rounded-2xl shadow-medium">
-                <img
+              <figure className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-muted shadow-medium sm:aspect-[3/4] lg:aspect-[4/5]">
+                <Image
                   src={heroImage}
                   alt={heroImageAlt}
-                  className="aspect-[4/5] w-full object-cover sm:aspect-[3/4] lg:aspect-[4/5]"
+                  fill
+                  sizes="(max-width: 1023px) 100vw, 50vw"
+                  quality={75}
                   loading="eager"
-                  decoding="async"
+                  fetchPriority="high"
+                  className="object-cover"
                 />
               </figure>
 

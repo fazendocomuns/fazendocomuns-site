@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useEffectEvent } from 'react'
 import { usePathname } from 'next/navigation'
 
 export function useLockBodyScroll(locked: boolean) {
@@ -18,8 +18,9 @@ export function useLockBodyScroll(locked: boolean) {
 
 export function useCloseOnRouteChange(onClose: () => void) {
   const pathname = usePathname()
+  const closeMenu = useEffectEvent(onClose)
 
   useEffect(() => {
-    onClose()
-  }, [pathname, onClose])
+    closeMenu()
+  }, [pathname])
 }

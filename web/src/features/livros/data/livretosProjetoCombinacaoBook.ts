@@ -1,16 +1,16 @@
 import type { Livro } from '@/features/livros/types'
+import { livroPdfUrls } from '@/features/livros/data/livroPdfUrls'
 
-const wixBase = 'https://static.wixstatic.com/media'
-const coverUrl = `${wixBase}/92a7cc_7bbda1d1ea15437ea47386841d3e8e08~mv2.jpeg/v1/fill/w_800,h_450,al_c,q_85,usm_0.66_1.00_0.01/92a7cc_7bbda1d1ea15437ea47386841d3e8e08~mv2.jpeg`
+const cover =
+  'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/capas-de-livros/CAPA-DO-LIVRO-COM-CRIANCAS-FAZENDO.jpg'
 
-const pdfUrl =
-  'https://www.fazendocomuns.com.br/_files/ugd/92a7cc_740af723a5d749dabe080e2b1a34a88f.pdf'
+const pdfUrl = livroPdfUrls.livretosProjetoCombinacao
 
 export const livretosProjetoCombinacaoBook = {
   slug: 'livretos-projeto-combinacao',
   title: 'Livretos — Projeto CombinAção',
   subtitle: 'Seis situações escolares para pesquisa com crianças',
-  cover: coverUrl,
+  cover,
   coverAlt: 'Capa dos livretos do Projeto CombinAção',
   categoryLabel: 'Publicação',
   ogType: 'article',
@@ -30,26 +30,15 @@ export const livretosProjetoCombinacaoBook = {
     'Leia online ou faça o download gratuito do conjunto completo em PDF.',
   ],
   editorialInfo: [
-    {
-      label: 'Formato',
-      value: 'Conjunto de 6 livretos (PDF)',
-    },
-    {
-      label: 'Idioma',
-      value: 'Português (Brasil)',
-    },
-    {
-      label: 'Período',
-      value: '2019 — 2022',
-    },
+    { label: 'Formato', value: 'Conjunto de 6 livretos (PDF)' },
+    { label: 'Idioma', value: 'Português (Brasil)' },
+    { label: 'Ano', value: '2022' },
+    { label: 'Editora', value: 'Projeto Fazendo Comuns' },
     {
       label: 'Instituição',
-      value: 'Projeto Fazendo Comuns — UFRJ',
+      value: 'Instituto de Psicologia — Universidade Federal do Rio de Janeiro (UFRJ)',
     },
-    {
-      label: 'Licença de acesso',
-      value: 'Leitura e download gratuitos',
-    },
+    { label: 'Licença de acesso', value: 'Leitura e download gratuitos' },
   ],
   credits: [
     {
@@ -57,13 +46,13 @@ export const livretosProjetoCombinacaoBook = {
       names: ['Lucia Rabello de Castro'],
     },
     {
-      label: 'Pesquisa e mediação',
-      names: ['Equipe do Projeto CombinAção / Fazendo Comuns'],
+      label: 'Pesquisa e produção',
+      names: ['Equipe do Projeto CombinAção / Fazendo Comuns / UFRJ'],
     },
     {
-      label: 'Participação',
+      label: 'Instituição responsável',
       names: [
-        'Crianças e equipes escolares de 34 escolas públicas do Rio de Janeiro',
+        'Instituto de Psicologia — Universidade Federal do Rio de Janeiro (UFRJ)',
       ],
     },
   ],

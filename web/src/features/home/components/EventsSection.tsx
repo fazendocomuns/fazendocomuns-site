@@ -1,5 +1,3 @@
-'use client'
-
 import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { Calendar, MapPin, ArrowUpRight } from 'lucide-react'
@@ -37,7 +35,8 @@ export function EventsSection({ events }: EventsSectionProps) {
                     alt={event.imageAlt}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    quality={60}
+                    className="object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/50 to-transparent" />
                   <div className="absolute right-0 bottom-0 left-0 p-6">

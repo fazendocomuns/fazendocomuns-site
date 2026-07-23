@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+import { useState } from 'react'
 import { Play } from 'lucide-react'
 import type { EventPanelColor } from '@/features/eventos/data/asCriancasFalamContent'
 import { cn } from '@/lib/utils'
@@ -18,23 +20,40 @@ const iconStyles: Record<EventPanelColor, string> = {
   yellow: 'bg-brand-yellow text-neutral-900',
 }
 
-function getEmbedUrl(url: string): string | null {
+interface VideoEmbed {
+  embedUrl: string
+  thumbnailUrl?: string
+}
+
+function getVideoEmbed(url: string): VideoEmbed | null {
   try {
     const parsed = new URL(url)
 
     if (parsed.hostname.includes('youtube.com')) {
       const videoId = parsed.searchParams.get('v')
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null
+      return videoId
+        ? {
+            embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`,
+            thumbnailUrl: `https://i.ytimg.com/vi_webp/${videoId}/hqdefault.webp`,
+          }
+        : null
     }
 
     if (parsed.hostname.includes('youtu.be')) {
       const videoId = parsed.pathname.slice(1)
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null
+      return videoId
+        ? {
+            embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`,
+            thumbnailUrl: `https://i.ytimg.com/vi_webp/${videoId}/hqdefault.webp`,
+          }
+        : null
     }
 
     if (parsed.hostname.includes('vimeo.com')) {
       const videoId = parsed.pathname.split('/').filter(Boolean).pop()
-      return videoId ? `https://player.vimeo.com/video/${videoId}` : null
+      return videoId
+        ? { embedUrl: `https://player.vimeo.com/video/${videoId}?autoplay=1` }
+        : null
     }
   } catch {
     return null
@@ -50,7 +69,8 @@ interface EventPanelVideoProps {
 }
 
 export function EventPanelVideo({ title, color, videoUrl }: EventPanelVideoProps) {
-  const embedUrl = videoUrl ? getEmbedUrl(videoUrl) : null
+  const [isActivated, setIsActivated] = useState(false)
+  const video = videoUrl ? getVideoEmbed(videoUrl) : null
 
   return (
     <div
@@ -60,14 +80,44 @@ export function EventPanelVideo({ title, color, videoUrl }: EventPanelVideoProps
       )}
     >
       <div className="relative aspect-video w-full bg-neutral-900/90">
-        {embedUrl ? (
+        {video && isActivated ? (
           <iframe
-            src={embedUrl}
+            src={video.embedUrl}
             title={title}
             className="absolute inset-0 h-full w-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
           />
+        ) : video ? (
+          <button
+            type="button"
+            onClick={() => setIsActivated(true)}
+            className="group absolute inset-0 flex size-full items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white"
+            aria-label={`Reproduzir ${title}`}
+          >
+            {video.thumbnailUrl ? (
+              <Image
+                src={video.thumbnailUrl}
+                alt=""
+                fill
+                sizes="(max-width: 1023px) 100vw, 50vw"
+                quality={60}
+                className="object-cover opacity-85 transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+              />
+            ) : null}
+            <span className="absolute inset-0 bg-black/30 transition-colors group-hover:bg-black/20" />
+            <span
+              className={cn(
+                'relative flex h-16 w-16 items-center justify-center rounded-full shadow-medium transition-transform group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none',
+                iconStyles[color],
+              )}
+              aria-hidden="true"
+            >
+              <Play className="ml-1 size-7 fill-current" />
+            </span>
+          </button>
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
             <div

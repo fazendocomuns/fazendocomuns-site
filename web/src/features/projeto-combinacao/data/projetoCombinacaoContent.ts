@@ -17,17 +17,8 @@ export interface CombinacaoBook {
   image: CombinacaoImage
 }
 
-const wixBase = 'https://static.wixstatic.com/media'
-
-function wixImage(
-  fileId: string,
-  ext: 'png' | 'jpeg' | 'jpg',
-  width: number,
-  height: number,
-) {
-  const file = `${fileId}~mv2.${ext}`
-  return `${wixBase}/${file}/v1/fill/w_${width},h_${height},al_c,q_85,usm_0.66_1.00_0.01/${file}`
-}
+const falatorioImg = (file: string) =>
+  `https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/pagina-o-projeto-falatorio/${file}`
 
 export const projetoCombinacaoContent = {
   title: 'O Projeto CombinAção',
@@ -44,7 +35,7 @@ export const projetoCombinacaoContent = {
     'Em muitos casos, é a escola que proporciona os primeiros vínculos com outros que não lhes são familiares – pares ou adultos – com os quais têm que aprender a agir nas diversas situações de tensão, desacordo e conflito. Tendo isso em vista, o Projeto CombinAção pretendeu compreender os deslocamentos contemporâneos das relações intergeracionais, modificadas pela emergência de uma cultura de direitos da criança, e também de suas novas posições de sujeito (a de consumidor, por exemplo) (Castro et al., 2013; Castro, Lara, 2016; Castro, Tumolo, 2019).',
     ],
     capa: {
-      url: wixImage('92a7cc_c51101dc374f4dd3850926f7d44c5f0d', 'png', 1200, 848),
+      url: falatorioImg('capa-projeto-combinacao.png'),
       alt: 'Capa do Projeto CombinAção',
     },
     metodologia: [
@@ -55,11 +46,11 @@ export const projetoCombinacaoContent = {
     ],
     livretosPreview: [
       {
-        url: wixImage('92a7cc_7bbda1d1ea15437ea47386841d3e8e08', 'jpeg', 1200, 674),
+        url: falatorioImg('CRIANCAS-FAZENDO.jpg'),
         alt: 'Capa do livro com crianças fazendo',
       },
       {
-        url: wixImage('92a7cc_2007b6d80c22468e85ada9d668342b3d', 'jpeg', 1200, 674),
+        url: falatorioImg('livro-aberto.jpg'),
         alt: 'Livro aberto com atividades do projeto',
       },
     ],
@@ -72,7 +63,7 @@ export const projetoCombinacaoContent = {
         'Trata-se de uma situação que demandava a posição dos estudantes sobre quais ações podem favorecer que aprendam melhor, e quais atividades podem acontecer de mais interessante na escola. A primeira imagem do livro 1, abaixo à esquerda, visa que escolham coletivamente quais ações e relações com a professora a criança privilegia; quais ações e relações entre eles, e com a professora, avaliam que podem aprender melhor. A imagem à direita demanda que as crianças pensem e digam quais atividades na escola se tornam relevantes para uma escola interessante: o recreio, a comida, os passeios ou as amizades. Portanto, nesse livro, se investigou quais ações/relações na aprendizagem são caras para elas e quais atividades parecem importantes para que a escola seja um lugar interessante. Segue abaixo a imagem do livro 1.',
       ],
       image: {
-        url: wixImage('92a7cc_a967a63c753d46cfaa53665697de11e3', 'png', 1200, 852),
+        url: falatorioImg('Livro-1-A-AULA-E-TOP-A-ESCOLA-E-TOP.png'),
         alt: 'Páginas do livro 1 — A AULA É TOP! A ESCOLA É TOP!',
       },
     },
@@ -83,7 +74,7 @@ export const projetoCombinacaoContent = {
         'Trata-se de uma situação que demandava a posição dos estudantes sobre como as materialidades, os espaços, seus corpos e o da professora podem favorecer sua aprendizagem. A imagem à esquerda convoca as crianças a privilegiarem que tipo de objetos deveriam compor uma sala de aula construída por elas. O ponto de interrogação que se encontra entre as opções dá lugar à possibilidade das crianças expandirem as opções de objetos sugeridas pelo livro para uma sugerida por elas. A materialidade – os objetos da escola – favorecem a coletivização das experiências na escola e o compartilhar entre os estudantes: por exemplo, ter e brincar com bola no recreio, objeto que, em muitas escolas, os estudantes disseram não existir. A imagem à direita demanda que as crianças selecionem qual a relação com a professora, situando-a na materialidade do espaço e dos objetos da sala de aula, tornando mais animador o estar em sala de aula. A escola é vivida a partir da concretude e da organização dos espaços e materiais de que as crianças dispõem e do favorecimento aos seus movimentos e interações corporais. Portanto, quisemos investigar como a espacialidade dos corpos-em-relação e a materialidade dos objetos anima a aprendizagem, segundo a percepção dos estudantes. Segue abaixo a imagem do livro 2.',
       ],
       image: {
-        url: wixImage('92a7cc_f43864b8ea65474fb2177419ca6c977c', 'png', 1200, 848),
+        url: falatorioImg('Livro-2-DEU-A-LOUCA-NA-ESCOLA.png'),
         alt: 'Páginas do livro 2 — DEU A LOUCA NA ESCOLA!',
       },
     },
@@ -95,7 +86,7 @@ export const projetoCombinacaoContent = {
         'Lembremo-nos que as crianças precisam se colocar de acordo entre elas para decidir sua resposta. Por isso, as respostas dadas por cada grupinho de alunos significou um trabalho de discussão, negociação e decisão entre eles sobre uma miríade de possibilidades sobre o que mudar na escola.',
       ],
       image: {
-        url: wixImage('92a7cc_4807177d32cc426c8a57e6283d1fe355', 'png', 1200, 848),
+        url: falatorioImg('Livro-3-E-HORA-DE-FALAR-BORA-FALAR.png'),
         alt: 'Páginas do livro 3 — É HORA DE FALAR! BORA FALAR?',
       },
     },
@@ -106,7 +97,7 @@ export const projetoCombinacaoContent = {
         'Trata-se de uma situação que demandava a posição das crianças sobre quais ações preferenciais dos alunos estão relacionadas aos diferentes espaços da escola. Na primeira página do livro há três imagens de lugares que representam, respectivamente, o espaço da entrada/portão da escola, o corredor e o lugar onde ocorre o recreio. Em cada caso, as crianças precisavam selecionar três ações/relações que se destacavam nos espaços representados em cada imagem. Na segunda página a demanda era que as crianças escolhessem o lugar que mais gostam na escola e o que fazem nele. As respostas, indo além de qualquer opção que pudesse ser dada por nós, estavam em aberto para que as crianças pudessem imaginar e simular como seria uma postagem no Facebook acerca de algo que fazem no seu lugar preferido da escola. As respostas das crianças aos livros mostram que há ações privilegiadas que corporificam suas experiências coletivas em cada espaço da escola, como a entrada e a saída da escola, os corredores e o espaço do recreio. Segue abaixo a imagem do livro 4.',
       ],
       image: {
-        url: wixImage('92a7cc_00394cacf7cd4781abe53a3368bd84f7', 'png', 1200, 846),
+        url: falatorioImg('Livro-4-POSTANDO-NO-FACE.png'),
         alt: 'Páginas do livro 4 — POSTANDO NO FACE',
       },
     },
@@ -118,7 +109,7 @@ export const projetoCombinacaoContent = {
         'Fazer junto significa “fazer comuns” e possibilitar tanto a criação de vínculos, formas coletivas de ser e habitar o mundo, como pactuar, convergir e agir coletivamente. As situações examinadas nos levam a atentar para o lugar, por excelência, da escola como aquele que enseja e convida o “fazer comuns” onde proliferam situações de convivência e aprendizagens coletivas. A expectativa da pergunta de que é a “união que faz a força” induz pensar que estar junto, com todas suas conflituosidades, pode apontar caminhos para a boa convivência coletiva no processo de transmissão educacional. Segue abaixo a imagem do livro 5.',
       ],
       image: {
-        url: wixImage('92a7cc_8c9abfdfe43e4ebe9d78039f4e2d532b', 'png', 1200, 850),
+        url: falatorioImg('Livro-5-A-UNIAO-FAZ-A-FORCA.png'),
         alt: 'Páginas do livro 5 — A UNIÃO FAZ A FORÇA!!',
       },
     },
@@ -129,7 +120,7 @@ export const projetoCombinacaoContent = {
         'Trata-se de uma situação que demandava aos alunos sua posição sobre os diferentes lugares da escola. Como o nome do livro já diz, a proposta é que as crianças se imaginem em uma situação em que estão recebendo visitantes na sua escola e querem que eles a conheçam. Para isso, precisam valorar diferencialmente a espacialidade da escola escolhendo os dois melhores lugares de convivência e representá-los por meio de um desenho. Além disso, foi solicitado que caracterizassem afetivamente a escola mostrando o lugar mais legal dela, o mais feio, aquele que eles não podem ir e também o lugar que é de todos. Neste livro se buscou investigar como as relações com os espaços da escola são construídas afetivamente a partir de como as crianças, de forma coletiva, se utilizam e ocupam (ou não) os diferentes espaços. Segue abaixo a imagem do livro 6.',
       ],
       image: {
-        url: wixImage('92a7cc_da2be1b0585041a8bc3f742bb2108cb8', 'png', 1200, 850),
+        url: falatorioImg('Livro-6-GUIA-DO-VISITANTE-NA-ESCOLA.png'),
         alt: 'Páginas do livro 6 — GUIA DO VISITANTE NA ESCOLA',
       },
     },
@@ -147,25 +138,26 @@ export const projetoCombinacaoContent = {
       'Os resultados do O Projeto CombinAção podem ser encontrados em nosso site; convidamos você a visitar as demais seções para conhecê-los um pouco mais.',
   },
   recreioImage: {
-    url: wixImage('92a7cc_f2e18117bcd34f45a2067e803746a43b', 'jpeg', 676, 1200),
+    url: falatorioImg('RECREIO-E-TEMPO-DE-SER-FELIZ.jpg'),
     alt: 'Cartaz: Recreio é tempo de ser feliz',
   },
   relatedPublication: {
     slug: 'livretos-projeto-combinacao',
     title: 'Livretos — Projeto CombinAção',
     subtitle: 'Seis situações escolares para pesquisa com crianças',
-    cover: wixImage('92a7cc_7bbda1d1ea15437ea47386841d3e8e08', 'jpeg', 800, 450),
+    cover:
+      'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/biblioteca-de-imagens/capas-de-livros/CAPA-DO-LIVRO-COM-CRIANCAS-FAZENDO.jpg',
     coverAlt: 'Capa dos livretos do Projeto CombinAção',
     href: '/livros/livretos-projeto-combinacao',
     teaser:
       'Acesse o conjunto completo dos seis livretos para ler online ou baixar o PDF gratuitamente.',
     downloadUrl:
-      'https://www.fazendocomuns.com.br/_files/ugd/92a7cc_740af723a5d749dabe080e2b1a34a88f.pdf',
+      'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/livros/livros/Livrinhos-Projeto-CombinAcao.pdf',
     downloadLabel: 'Baixar PDF',
   },
   pdf: {
     label: 'Livrinhos — PDF',
-    url: 'https://www.fazendocomuns.com.br/_files/ugd/92a7cc_740af723a5d749dabe080e2b1a34a88f.pdf',
+    url: 'https://yvrgrtntodxcxicocggm.supabase.co/storage/v1/object/public/livros/livros/Livrinhos-Projeto-CombinAcao.pdf',
   },
   references: [
     'CASTRO, L. R. Da invisibilidade à ação: crianças e jovens na construção da cultura. In: CASTRO, L. R. (Org.). Crianças e jovens na construção da cultura. Rio de Janeiro: NAU, 2001. p. 19-46.',

@@ -54,9 +54,9 @@ function notify() {
 export function useMockAuth() {
   const auth = useSyncExternalStore(subscribe, getSnapshot, () => null)
 
-  const login = useCallback(async (email: string, _password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     await new Promise((r) => setTimeout(r, 900))
-    if (email === 'erro@fazendocomuns.com.br') {
+    if (!password || email === 'erro@fazendocomuns.com.br') {
       throw new Error('E-mail ou senha incorretos. Tente novamente.')
     }
     const state: AuthState = { email, loggedInAt: new Date().toISOString() }

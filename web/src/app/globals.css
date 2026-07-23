@@ -179,6 +179,55 @@
   75% { transform: rotate(3deg); }
 }
 
+@keyframes scroll-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--reveal-x, 0), var(--reveal-y, 40px), 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes page-hero-scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes page-hero-rise {
+  from { opacity: 0; transform: translate3d(0, 20px, 0); }
+  /* `none` evita stacking context residual que prende dropdowns/menus fixed */
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-hero-puzzle {
+    animation: page-hero-scale-in 0.5s ease-out both;
+  }
+
+  .page-hero-title {
+    animation: page-hero-rise 0.6s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .page-hero-subtitle {
+    animation: page-hero-rise 0.6s 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-reveal {
+      animation-name: scroll-reveal;
+      animation-duration: 1ms;
+      animation-fill-mode: both;
+      animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      animation-timeline: view();
+      animation-range: entry 5% entry 35%;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

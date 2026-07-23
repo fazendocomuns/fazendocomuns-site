@@ -43,6 +43,9 @@ import { formatRelativeDate } from '@/features/admin/lib/formatters'
 import {
   looksGenericFileName,
   normalizeFolder,
+  inferBucketFromFolderPath,
+  LIBRARY_BUCKET_OPTIONS,
+  type LibraryBucket,
 } from '@/integrations/supabase/repositories/midiaRepository'
 import { useAdminUiStore } from '@/features/admin/store/adminUiStore'
 import type { MediaItem } from '@/features/admin/types'
@@ -103,6 +106,7 @@ export function MediaLibraryPage() {
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null)
   const [folderDialogOpen, setFolderDialogOpen] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
+  const [newFolderBucket, setNewFolderBucket] = useState<LibraryBucket>('biblioteca-de-imagens')
   const [renameTarget, setRenameTarget] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
@@ -278,7 +282,7 @@ export function MediaLibraryPage() {
     return !draggingMediaId && Array.from(event.dataTransfer.types).includes('Files')
   }
 
-  function isInternalMediaDrag(_event?: DragEvent): boolean {
+  function isInternalMediaDrag(): boolean {
     return Boolean(draggingMediaId)
   }
 
@@ -289,12 +293,22 @@ export function MediaLibraryPage() {
       return
     }
 
+    const bucket =
+      inferBucketFromFolderPath(fullPath) ??
+      inferBucketFromFolderPath(currentFolder) ??
+      newFolderBucket
+
     try {
-      const created = await createFolder.mutateAsync(fullPath)
+      const created = await createFolder.mutateAsync({ path: fullPath, bucket })
       setFolderDialogOpen(false)
       setNewFolderName('')
+      setNewFolderBucket('biblioteca-de-imagens')
       setCurrentFolder(created)
-      showToast('Pasta criada!')
+      showToast(
+        bucket === 'livros'
+          ? 'Pasta criada no bucket de livros/PDF!'
+          : 'Pasta criada!',
+      )
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Não foi possível criar a pasta.'
       showToast(message, 'error')
@@ -376,7 +390,7 @@ export function MediaLibraryPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Biblioteca de mídia"
-        description="Organize arquivos em pastas. Imagens/vídeos → fotos · áudio → podcast · PDF → livros."
+        description="Imagens → biblioteca-de-imagens · áudio → podcast · PDF → livros."
         actions={
           <>
             <input
@@ -422,12 +436,12 @@ export function MediaLibraryPage() {
         onClick={() => fileInputRef.current?.click()}
         onDragEnter={(e) => {
           e.preventDefault()
-          if (isInternalMediaDrag(e)) return
+          if (isInternalMediaDrag()) return
           setDraggingUpload(true)
         }}
         onDragOver={(e) => {
           e.preventDefault()
-          if (isInternalMediaDrag(e)) return
+          if (isInternalMediaDrag()) return
           setDraggingUpload(true)
         }}
         onDragLeave={(e) => {
@@ -437,7 +451,7 @@ export function MediaLibraryPage() {
         onDrop={(e) => {
           e.preventDefault()
           setDraggingUpload(false)
-          if (isInternalMediaDrag(e)) return
+          if (isInternalMediaDrag()) return
           if (e.dataTransfer.files?.length) {
             void queueUploadFiles(e.dataTransfer.files)
           }
@@ -471,7 +485,7 @@ export function MediaLibraryPage() {
           onClick={() => setCurrentFolder('')}
           onDragOver={(e) => {
             e.preventDefault()
-            if (isInternalMediaDrag(e) || hasOsFiles(e)) {
+            if (isInternalMediaDrag() || hasOsFiles(e)) {
               setDropTargetFolder('')
             }
           }}
@@ -508,7 +522,7 @@ export function MediaLibraryPage() {
                 onClick={() => setCurrentFolder(path)}
                 onDragOver={(e) => {
                   e.preventDefault()
-                  if (isInternalMediaDrag(e) || hasOsFiles(e)) {
+                  if (isInternalMediaDrag() || hasOsFiles(e)) {
                     setDropTargetFolder(path)
                   }
                 }}
@@ -595,7 +609,7 @@ export function MediaLibraryPage() {
                 onDragOver={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  if (isInternalMediaDrag(e) || hasOsFiles(e)) {
+                  if (isInternalMediaDrag() || hasOsFiles(e)) {
                     setDropTargetFolder(next)
                   }
                 }}
@@ -759,27 +773,85 @@ export function MediaLibraryPage() {
         </div>
       )}
 
-      <Dialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen}>
+      <Dialog
+        open={folderDialogOpen}
+        onOpenChange={(open) => {
+          setFolderDialogOpen(open)
+          if (open) {
+            setNewFolderBucket(
+              inferBucketFromFolderPath(currentFolder) ?? 'biblioteca-de-imagens',
+            )
+          }
+          if (!open) {
+            setNewFolderName('')
+            setNewFolderBucket('biblioteca-de-imagens')
+          }
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Nova pasta</DialogTitle>
             <DialogDescription>
               {currentFolder
                 ? `Será criada dentro de “${currentFolder}”.`
-                : 'Será criada na raiz da biblioteca.'}
+                : 'Escolha o tipo: a pasta fica só nesse bucket do Storage (ex.: PDFs → livros).'}
             </DialogDescription>
           </DialogHeader>
-          <Input
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-            placeholder="ex.: podcast ou galerias/evento"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                void handleCreateFolder()
-              }
-            }}
-          />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-folder-name">Nome</Label>
+              <Input
+                id="new-folder-name"
+                value={newFolderName}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setNewFolderName(value)
+                  const inferred = inferBucketFromFolderPath(
+                    joinFolder(currentFolder, value),
+                  )
+                  if (inferred) setNewFolderBucket(inferred)
+                }}
+                placeholder="ex.: capas ou lançamentos"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    void handleCreateFolder()
+                  }
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo da pasta (bucket)</Label>
+              <Select
+                value={
+                  inferBucketFromFolderPath(joinFolder(currentFolder, newFolderName)) ??
+                  newFolderBucket
+                }
+                onValueChange={(value) => setNewFolderBucket(value as LibraryBucket)}
+                disabled={Boolean(
+                  inferBucketFromFolderPath(joinFolder(currentFolder, newFolderName)) ||
+                    inferBucketFromFolderPath(currentFolder),
+                )}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LIBRARY_BUCKET_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label} — {option.hint}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {(inferBucketFromFolderPath(joinFolder(currentFolder, newFolderName)) ||
+                inferBucketFromFolderPath(currentFolder)) && (
+                <p className="font-ui text-xs text-muted-foreground">
+                  Tipo definido pelo nome/caminho da pasta (ex.: “livros” → bucket livros).
+                </p>
+              )}
+            </div>
+          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setFolderDialogOpen(false)}>
               Cancelar
@@ -945,9 +1017,11 @@ export function MediaLibraryPage() {
                 </DialogDescription>
               </DialogHeader>
               {previewItem.type === 'image' ? (
+                // eslint-disable-next-line @next/next/no-img-element -- o CMS aceita URLs blob/data e origens arbitrárias na prévia local
                 <img
                   src={previewItem.url}
                   alt={previewItem.alt}
+                  decoding="async"
                   className="max-h-[60vh] w-full rounded-xl object-contain"
                 />
               ) : previewItem.type === 'audio' ? (

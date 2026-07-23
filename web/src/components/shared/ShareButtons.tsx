@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Check, Link2, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -47,6 +47,10 @@ const shareChannels: ShareChannel[] = [
   },
 ]
 
+const subscribeToLocation = () => () => undefined
+const getCurrentUrl = () => window.location.href
+const getServerUrl = () => ''
+
 interface ShareButtonsProps {
   title: string
   text?: string
@@ -64,14 +68,25 @@ export function ShareButtons({
   description = 'Espalhe nas redes sociais ou copie o link para enviar a quem quiser.',
   className,
 }: ShareButtonsProps) {
-  const [url] = useState(
-    () => urlProp ?? (typeof window !== 'undefined' ? window.location.href : ''),
+  const browserUrl = useSyncExternalStore(
+    subscribeToLocation,
+    getCurrentUrl,
+    getServerUrl,
   )
+  const url = urlProp ?? browserUrl
   const [copied, setCopied] = useState(false)
+  const copiedTimerRef = useRef<number | null>(null)
   const canNativeShare =
     typeof navigator !== 'undefined' && Boolean(navigator.share)
 
   const shareText = text ?? title
+
+  useEffect(
+    () => () => {
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
+    },
+    [],
+  )
 
   async function handleCopy() {
     if (!url) return
@@ -79,7 +94,8 @@ export function ShareButtons({
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current)
+      copiedTimerRef.current = window.setTimeout(() => setCopied(false), 2000)
     } catch {
       window.prompt('Copie o link da notícia:', url)
     }

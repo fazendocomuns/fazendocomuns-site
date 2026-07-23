@@ -1,8 +1,5 @@
-'use client'
-
 import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
-import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollReveal } from '@/components/shared/ScrollReveal'
@@ -36,11 +33,9 @@ export function BubblesSection() {
             return (
               <ScrollReveal key={item.id} delay={index * 0.08}>
                 <article className="group flex flex-col items-center text-center">
-                  <motion.div
-                    whileHover={{ y: -8, scale: 1.06 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  <div
                     className={cn(
-                      'relative aspect-square w-32 shrink-0 overflow-hidden rounded-full border-4 border-card bg-card shadow-medium ring-4 md:w-36 lg:w-40',
+                      'relative aspect-square w-32 shrink-0 overflow-hidden rounded-full border-4 border-card bg-card shadow-medium ring-4 transition-transform duration-300 hover:-translate-y-2 hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none md:w-36 lg:w-40',
                       ringColor,
                     )}
                   >
@@ -49,9 +44,10 @@ export function BubblesSection() {
                       alt={item.imageAlt}
                       fill
                       sizes="160px"
-                      className="rounded-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                      quality={60}
+                      className="rounded-full object-cover object-center transition-transform duration-500 group-hover:scale-110 motion-reduce:transform-none motion-reduce:transition-none"
                     />
-                  </motion.div>
+                  </div>
 
                   <h3 className="mt-5 max-w-[200px] font-heading text-base font-bold leading-snug text-foreground md:text-lg">
                     {item.title}

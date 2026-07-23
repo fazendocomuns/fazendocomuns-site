@@ -1,5 +1,4 @@
-'use client'
-
+import Image from 'next/image'
 import { AppLink as Link } from '@/components/shared/AppLink'
 import { ArrowLeft } from 'lucide-react'
 import { PageHero } from '@/components/layout/PageHero'
@@ -67,11 +66,16 @@ export function ParceirosPage({ groups }: ParceirosPageProps) {
                     key={logo.alt}
                     className="flex items-center justify-center rounded-2xl border border-border/60 bg-card px-8 py-6 shadow-soft md:px-10 md:py-8"
                   >
-                    <img
-                      src={logo.src}
-                      alt={logo.alt}
-                      className="max-h-20 w-auto max-w-full object-contain md:max-h-24"
-                    />
+                    <span className="relative block h-20 w-48 max-w-full md:h-24 md:w-56">
+                      <Image
+                        src={logo.src}
+                        alt={logo.alt}
+                        fill
+                        sizes="224px"
+                        quality={60}
+                        className="object-contain"
+                      />
+                    </span>
                   </figure>
                 ))}
               </div>

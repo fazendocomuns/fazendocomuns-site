@@ -24,7 +24,12 @@ export function SortableTableHead({
   const isActive = currentField === field
 
   return (
-    <TableHead className={className}>
+    <TableHead
+      className={className}
+      aria-sort={
+        isActive ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'
+      }
+    >
       <button
         type="button"
         onClick={() => onSort(field)}
@@ -32,9 +37,6 @@ export function SortableTableHead({
           'inline-flex items-center gap-1.5 font-ui transition-colors hover:text-foreground',
           isActive ? 'text-foreground' : 'text-muted-foreground',
         )}
-        aria-sort={
-          isActive ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'
-        }
       >
         {label}
         {isActive ? (
