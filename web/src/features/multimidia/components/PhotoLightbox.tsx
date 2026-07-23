@@ -1,8 +1,10 @@
 'use client'
 
 import Image from 'next/image'
-import { useCallback, useEffect, useEffectEvent, useId, useRef } from 'react'
+import { useCallback, useEffect, useEffectEvent, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { getLenis } from '@/hooks/useLenis'
 import { supabaseImageLoader } from '@/lib/supabaseImageLoader'
 
 interface PhotoLightboxProps {
@@ -28,6 +30,11 @@ export function PhotoLightbox({
   const dialogRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const touchStartXRef = useRef<number | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const goPrev = useCallback(() => {
     if (!total) return
@@ -71,25 +78,31 @@ export function PhotoLightbox({
 
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    document.documentElement.classList.add('lenis-stopped')
+    getLenis()?.stop()
+
     window.addEventListener('keydown', onDialogKeyDown)
 
     return () => {
       cancelAnimationFrame(focusFrame)
       document.body.style.overflow = previousOverflow
+      document.documentElement.classList.remove('lenis-stopped')
+      getLenis()?.start()
       window.removeEventListener('keydown', onDialogKeyDown)
       previouslyFocused?.focus()
     }
   }, [isOpen])
 
-  if (!isOpen || !current) return null
+  if (!mounted || !isOpen || !current) return null
 
-  return (
+  return createPortal(
     <div
       ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      className="fixed inset-0 z-100 flex items-center justify-center bg-black/90 p-3 sm:p-6"
+      data-lenis-prevent
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-3 sm:p-6"
       onClick={onClose}
       onTouchStart={(event) => {
         touchStartXRef.current = event.changedTouches[0]?.clientX ?? null
@@ -153,21 +166,23 @@ export function PhotoLightbox({
       ) : null}
 
       <div
-        className="relative h-[min(88vh,900px)] w-[min(96vw,1200px)]"
+        className="relative flex h-[min(88dvh,900px)] w-[min(96vw,1200px)] items-center justify-center"
         onClick={(event) => event.stopPropagation()}
       >
         <Image
           key={current}
           src={current}
           alt={`${title} — foto ${index + 1}`}
-          fill
+          width={1200}
+          height={1600}
           sizes="96vw"
-          quality={75}
+          quality={80}
           loading="eager"
           loader={supabaseImageLoader}
-          className="rounded-lg object-contain shadow-strong"
+          className="max-h-[min(88dvh,900px)] max-w-full h-auto w-auto rounded-lg object-contain shadow-strong"
         />
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
